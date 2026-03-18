@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — tudu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;1,14..32,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F4F3EF;--surface:#FFFFFF;
+  --border:#E5E3DC;
+  --text:#1C1B18;--text-2:#6B6960;--text-3:#A09D96;
+  --accent-text:#4338CA;
+  --r-md:10px;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#111110;--surface:#1C1C1A;
+  --border:#2E2D29;
+  --text:#F0EDE6;--text-2:#9B9890;--text-3:#5C5A54;
+  --accent-text:#A5B4FC;
+}}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.7;padding:40px 20px}
+.wrap{max-width:680px;margin:0 auto}
+.back{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text-3);text-decoration:none;margin-bottom:32px;transition:color .12s}
+.back:hover{color:var(--accent-text)}
+h1{font-size:28px;font-weight:600;margin-bottom:8px}
+.meta{font-size:13px;color:var(--text-3);margin-bottom:40px}
+h2{font-size:16px;font-weight:600;margin:36px 0 10px}
+p{font-size:14.5px;color:var(--text-2);margin-bottom:12px}
+ul{font-size:14.5px;color:var(--text-2);padding-left:20px;margin-bottom:12px}
+ul li{margin-bottom:6px}
+a{color:var(--accent-text)}
+.callout{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:16px 20px;margin:24px 0}
+.callout p{margin-bottom:0}
+hr{border:none;border-top:1px solid var(--border);margin:40px 0}
+footer{font-size:13px;color:var(--text-3)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <a class="back" href="/tudu/">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L5 7l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Back to tudu
+  </a>
+
+  <h1>Privacy Policy</h1>
+  <p class="meta">tudu · Last updated: March 2026</p>
+
+  <div class="callout">
+    <p><strong>Short version:</strong> tudu stores your data in your own browser and, optionally, your own Google Drive account. We have no servers, collect no personal information, and never see your data.</p>
+  </div>
+
+  <h2>What tudu is</h2>
+  <p>tudu is a personal planning application delivered as a static web page. It runs entirely in your browser. There is no tudu server, no user accounts on our side, and no database we operate.</p>
+
+  <h2>Data storage</h2>
+  <p>By default, all data you enter — planners, projects, tasks, notes, itineraries — is stored in your browser's <code style="font-size:13px;background:var(--bg);padding:1px 5px;border-radius:4px;border:1px solid var(--border)">localStorage</code> on your device. It never leaves your device unless you explicitly export it or connect Google Drive.</p>
+
+  <h2>Google Drive integration (optional)</h2>
+  <p>If you choose to connect Google Drive, tudu uses Google's OAuth 2.0 to request the following permission:</p>
+  <ul>
+    <li><strong>See, edit, create and delete only the specific Google Drive files you use with this app</strong> (<code style="font-size:13px">drive.file</code> scope)</li>
+  </ul>
+  <p>This permission is used solely to:</p>
+  <ul>
+    <li>Create a folder called <strong>tudu</strong> in your Google Drive</li>
+    <li>Save and load your tudu data as a JSON file inside that folder (<code style="font-size:13px">tudu-data.json</code>)</li>
+    <li>In future: store file attachments you upload to tasks or events in project subfolders</li>
+  </ul>
+  <p>tudu can only access files it has created. It cannot read, modify, or delete any other files in your Google Drive.</p>
+  <p>Your data is written directly from your browser to your Google Drive using Google's API. It does not pass through any tudu server because there is no tudu server.</p>
+
+  <h2>What we do not do</h2>
+  <ul>
+    <li>We do not collect, store, or transmit your personal data to any server we operate</li>
+    <li>We do not use analytics, tracking pixels, or advertising</li>
+    <li>We do not share your data with any third party (your data goes between your browser and Google only, if you connect Drive)</li>
+    <li>We do not store your Google credentials — authentication is handled entirely by Google's own sign-in flow</li>
+  </ul>
+
+  <h2>Google user data</h2>
+  <p>When you sign in with Google, tudu retrieves your name, email address, and profile picture from Google's API. This information is displayed in the app sidebar and stored in your browser's localStorage for convenience. It is not sent to any external server.</p>
+  <p>tudu's use of Google user data complies with the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener">Google API Services User Data Policy</a>, including the Limited Use requirements.</p>
+
+  <h2>Cookies</h2>
+  <p>tudu does not set any cookies.</p>
+
+  <h2>Children's privacy</h2>
+  <p>tudu is a general-purpose productivity tool not directed at children under 13. We do not knowingly collect information from children.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>If this policy changes materially, the "Last updated" date at the top will be updated. As the app has no accounts, we cannot notify users directly — check this page if you want to see the current version.</p>
+
+  <h2>Contact</h2>
+  <p>Questions about this policy? Reach out via the <a href="https://github.com/dozauk/tudu/issues" target="_blank" rel="noopener">GitHub repository</a>.</p>
+
+  <hr>
+  <footer>tudu is open source. <a href="https://github.com/dozauk/tudu" target="_blank" rel="noopener">View source on GitHub</a>.</footer>
+
+</div>
+</body>
+</html>
