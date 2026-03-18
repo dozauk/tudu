@@ -1,0 +1,2837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>tudu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;1,14..32,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --accent:#6366F1;--accent-h:#4F46E5;--accent-lite:#EEF2FF;--accent-text:#4338CA;
+  --bg:#F4F3EF;--surface:#FFFFFF;--surface-2:#F9F8F5;
+  --border:#E5E3DC;--border-2:#CCCAC2;
+  --text:#1C1B18;--text-2:#6B6960;--text-3:#A09D96;
+  --green:#16A34A;--green-bg:#DCFCE7;--green-t:#15803D;
+  --amber:#D97706;--amber-bg:#FEF3C7;--amber-t:#92400E;
+  --red:#DC2626;--red-bg:#FEE2E2;--red-t:#991B1B;
+  --sw:248px;--th:56px;
+  --r-sm:6px;--r-md:10px;--r-lg:14px;
+  --sh-sm:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --sh-md:0 4px 16px rgba(0,0,0,.08),0 1px 4px rgba(0,0,0,.04);
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#111110;--surface:#1C1C1A;--surface-2:#242422;
+  --border:#2E2D29;--border-2:#3D3C37;
+  --text:#F0EDE6;--text-2:#9B9890;--text-3:#5C5A54;
+  --accent-lite:#1E1D4C;--accent-text:#A5B4FC;
+  --green-bg:#052e16;--green-t:#4ade80;
+  --amber-bg:#431407;--amber-t:#fbbf24;
+  --red-bg:#450a0a;--red-t:#f87171;
+}}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;font-size:14px;line-height:1.5}
+
+/* ── Layout ── */
+.sidebar{width:var(--sw);min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{height:var(--th);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px;flex-shrink:0;position:sticky;top:0;z-index:10}
+.content{flex:1;padding:28px;overflow-y:auto}
+
+/* ── Sidebar ── */
+.sb-header{padding:16px 16px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.app-logo{width:28px;height:28px;background:var(--accent);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:13px;letter-spacing:-.5px;flex-shrink:0}
+.app-name{font-size:15px;font-weight:600;color:var(--text);letter-spacing:-.3px}
+.sb-section{padding:12px 10px 4px;font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em}
+.planner-item{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:var(--r-md);cursor:pointer;margin:1px 6px;transition:background .12s;color:var(--text-2);font-size:13.5px;font-weight:500;position:relative}
+.planner-item:hover{background:var(--surface-2)}
+.planner-item.active{background:var(--accent-lite);color:var(--accent-text)}
+.planner-icon{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;background:var(--surface-2)}
+.planner-item.active .planner-icon{background:rgba(99,102,241,.15)}
+.planner-count{margin-left:auto;font-size:11px;color:var(--text-3);font-weight:500}
+.planner-item.active .planner-count{color:var(--accent-text);opacity:.7}
+.planner-del{display:none;position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-3);font-size:16px;line-height:1;padding:2px 5px;border-radius:4px}
+.planner-del:hover{color:var(--red)}
+.planner-item:hover .planner-count{opacity:0}
+.planner-item:hover .planner-del{display:block}
+.sb-add-btn{display:flex;align-items:center;gap:8px;padding:6px 10px;margin:2px 6px;border-radius:var(--r-md);cursor:pointer;color:var(--text-3);font-size:13px;font-weight:500;background:none;border:none;width:calc(100% - 12px);text-align:left;transition:all .12s;font-family:inherit}
+.sb-add-btn:hover{background:var(--surface-2);color:var(--text-2)}
+.sb-footer{margin-top:auto;padding:12px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:4px}
+.user-chip{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:var(--r-md)}
+.avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;color:#fff}
+.user-info{min-width:0}
+.user-name{font-size:13px;font-weight:500;color:var(--text);line-height:1.3}
+.user-role{font-size:11px;color:var(--text-3);line-height:1.3}
+.sb-data-btns{display:flex;gap:4px}
+.sb-data-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:5px 8px;border-radius:var(--r-sm);font-size:11.5px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--surface-2);color:var(--text-2);font-family:inherit;transition:all .12s}
+.sb-data-btn:hover{border-color:var(--border-2);background:var(--surface);color:var(--text)}
+
+/* ── Topbar ── */
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:13.5px;min-width:0;flex:1}
+.bc-link{color:var(--text-3);cursor:pointer;white-space:nowrap;font-weight:500}
+.bc-link:hover{color:var(--text-2)}
+.bc-sep{color:var(--text-3);font-size:12px}
+.bc-current{font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:var(--r-md);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border-2);background:var(--surface);color:var(--text);font-family:inherit;transition:all .12s;line-height:1.4;white-space:nowrap}
+.btn:hover{background:var(--surface-2)}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:var(--accent-h);border-color:var(--accent-h)}
+.btn-ghost{border-color:transparent;background:transparent;color:var(--text-2)}
+.btn-ghost:hover{background:var(--surface-2);color:var(--text);border-color:transparent}
+.btn-danger{background:var(--red-bg);color:var(--red-t);border-color:transparent}
+.btn-danger:hover{background:var(--red);color:#fff}
+.btn-sm{padding:4px 10px;font-size:12px}
+.btn-icon{padding:5px;border-color:transparent;background:transparent;color:var(--text-3)}
+.btn-icon:hover{background:var(--surface-2);border-color:transparent;color:var(--text)}
+
+/* ── Page header ── */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:16px}
+.page-title{font-size:22px;font-weight:600;letter-spacing:-.4px;color:var(--text)}
+.page-subtitle{font-size:13px;color:var(--text-3);margin-top:2px}
+
+/* ── View toggle ── */
+.view-toggle{display:flex;align-items:center;gap:2px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:2px;flex-shrink:0}
+.view-btn{display:flex;align-items:center;justify-content:center;width:28px;height:26px;border:none;background:none;border-radius:6px;cursor:pointer;color:var(--text-3);transition:all .12s}
+.view-btn:hover{color:var(--text-2)}
+.view-btn.active{background:var(--surface);color:var(--text);box-shadow:var(--sh-sm)}
+
+/* ── Badges ── */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:500;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.badge-green{background:var(--green-bg);color:var(--green-t)}
+.badge-amber{background:var(--amber-bg);color:var(--amber-t)}
+.badge-red{background:var(--red-bg);color:var(--red-t)}
+.badge-neutral{background:var(--surface-2);color:var(--text-3);border:1px solid var(--border)}
+.badge-accent{background:var(--accent-lite);color:var(--accent-text)}
+.meta-chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--text-2);background:var(--surface-2);border:1px solid var(--border);padding:3px 9px;border-radius:20px}
+
+/* ── Stats ── */
+.stats-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 16px}
+.stat-value{font-size:24px;font-weight:700;letter-spacing:-.5px;color:var(--text);line-height:1}
+.stat-label{font-size:12px;color:var(--text-3);margin-top:4px}
+
+/* ── Project grid ── */
+.project-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.project-card{background:var(--surface);border:1px solid var(--border);border-top-width:3px;border-radius:var(--r-lg);padding:18px;cursor:pointer;transition:box-shadow .15s,border-color .15s,transform .1s;position:relative}
+.project-card:hover{box-shadow:var(--sh-md);transform:translateY(-1px)}
+.pc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
+.pc-title-row{display:flex;align-items:center;gap:8px;min-width:0}
+.color-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.pc-name{font-size:15px;font-weight:600;color:var(--text);letter-spacing:-.2px;line-height:1.3}
+.pc-desc{font-size:12.5px;color:var(--text-2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:10px}
+.pc-milestone{display:flex;align-items:center;gap:7px;font-size:12.5px;margin-bottom:12px;padding:7px 10px;background:var(--surface-2);border-radius:var(--r-sm)}
+.pc-milestone-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;color:var(--text)}
+.pc-milestone-date{font-size:11.5px;color:var(--text-3);white-space:nowrap}
+.pc-bottom{display:flex;align-items:center;gap:10px}
+.pc-progress-wrap{flex:1;min-width:0}
+.pc-progress-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:5px}
+.pc-progress-fill{height:100%;border-radius:2px}
+.pc-progress-label{font-size:11.5px;color:var(--text-3);font-weight:500}
+.pc-edit-btn{position:absolute;top:10px;right:10px;opacity:0;transition:opacity .12s}
+.project-card:hover .pc-edit-btn{opacity:1}
+
+/* ── Trip card specifics ── */
+.pc-trip-dates{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-2);margin-bottom:10px;padding:7px 10px;background:var(--surface-2);border-radius:var(--r-sm)}
+.pc-trip-dates .arrow{color:var(--text-3);font-size:11px}
+.pc-trip-dur{font-size:11.5px;color:var(--text-3);margin-left:auto;white-space:nowrap}
+
+/* ── Full view ── */
+.project-full-list{display:flex;flex-direction:column;gap:10px}
+.project-full-tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;transition:box-shadow .15s,border-color .15s}
+.project-full-tile:hover{box-shadow:var(--sh-sm);border-color:var(--border-2)}
+.pft-header{display:flex;align-items:stretch;cursor:pointer;user-select:none}
+.pft-accent{width:4px;flex-shrink:0}
+.pft-header-inner{flex:1;display:flex;align-items:center;gap:14px;padding:13px 16px;min-width:0}
+.pft-title-block{flex:1;min-width:0}
+.pft-name{font-size:15px;font-weight:600;color:var(--text);letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pft-desc{font-size:12px;color:var(--text-2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pft-meta{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.pft-progress-wrap{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.pft-progress-bar{width:80px;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.pft-progress-fill{height:100%;border-radius:2px}
+.pft-progress-label{font-size:11.5px;color:var(--text-3);white-space:nowrap;font-weight:500}
+.pft-expand-btn{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border:none;background:none;cursor:pointer;color:var(--text-3);border-radius:var(--r-sm);transition:all .12s;flex-shrink:0}
+.pft-expand-btn svg{transition:transform .2s}
+.pft-expand-btn.open svg{transform:rotate(180deg)}
+.pft-tasks{border-top:1px solid var(--border);padding:10px 16px 12px 20px;display:none}
+.pft-tasks.open{display:block}
+.pft-task-item{display:flex;align-items:center;gap:9px;padding:4px 0}
+.pft-task-cb{width:15px;height:15px;border:1.5px solid var(--border-2);border-radius:4px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.pft-task-cb.checked{background:var(--green);border-color:var(--green)}
+.pft-task-cb.checked::after{content:'';display:block;width:7px;height:4.5px;border-left:1.5px solid #fff;border-bottom:1.5px solid #fff;transform:rotate(-45deg) translateY(-1px)}
+.pft-task-text{font-size:13px;color:var(--text);flex:1}
+.pft-task-text.done{color:var(--text-3);text-decoration:line-through}
+.pft-task-del{opacity:0;background:none;border:none;cursor:pointer;color:var(--text-3);font-size:16px;padding:0 2px;line-height:1;border-radius:3px;transition:opacity .12s}
+.pft-task-item:hover .pft-task-del{opacity:1}
+.pft-task-del:hover{color:var(--red)}
+.pft-task-add{display:flex;gap:6px;margin-top:8px}
+.pft-task-input{flex:1;font-size:13px;padding:5px 9px;border:1px solid var(--border-2);border-radius:var(--r-md);background:transparent;color:var(--text);font-family:inherit;transition:border-color .15s}
+.pft-task-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.1)}
+.pft-task-input::placeholder{color:var(--text-3)}
+.pft-tasks-footer{display:flex;justify-content:flex-end;padding-top:8px;margin-top:4px;border-top:1px solid var(--border)}
+.pft-open-link{font-size:12px;color:var(--text-3);cursor:pointer;font-weight:500}
+.pft-open-link:hover{color:var(--text-2)}
+
+/* ── Detail view ── */
+.detail-layout{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start}
+@media(max-width:900px){.detail-layout{grid-template-columns:1fr}}
+.section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px;margin-bottom:14px}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.section-title{font-size:12px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em}
+.detail-header-card{background:var(--surface);border:1px solid var(--border);border-top-width:4px;border-radius:var(--r-lg);padding:22px;margin-bottom:14px}
+.dh-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:12px}
+.dh-title{font-size:22px;font-weight:700;letter-spacing:-.5px;color:var(--text)}
+.dh-desc{font-size:13.5px;color:var(--text-2);margin-top:4px}
+.dh-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}
+.progress-ring-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0}
+.ring-pct{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.5px;line-height:1;text-align:center}
+.ring-sub{font-size:11px;color:var(--text-3);text-align:center}
+
+/* ── Detail tabs (trips) ── */
+.detail-tabs{display:flex;gap:2px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:3px;margin-bottom:20px;width:fit-content}
+.detail-tab{padding:6px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:none;color:var(--text-2);font-family:inherit;transition:all .12s;display:flex;align-items:center;gap:6px}
+.detail-tab:hover{color:var(--text)}
+.detail-tab.active{background:var(--surface);color:var(--text);box-shadow:var(--sh-sm)}
+
+/* ── Timeline (milestones) ── */
+.timeline{padding:4px 0}
+.tl-item{display:flex;gap:14px;padding-bottom:20px}
+.tl-item:last-child{padding-bottom:0}
+.tl-spine{display:flex;flex-direction:column;align-items:center;width:16px;flex-shrink:0;margin-top:2px}
+.tl-dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--border-2);background:var(--surface);flex-shrink:0;z-index:1}
+.tl-dot.done{background:var(--green);border-color:var(--green)}
+.tl-dot.next{background:var(--accent);border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.2)}
+.tl-line{flex:1;width:2px;background:var(--border);margin-top:3px;min-height:12px}
+.tl-item:last-child .tl-line{display:none}
+.tl-content{flex:1;min-width:0}
+.tl-name{font-size:13.5px;font-weight:500;color:var(--text)}
+.tl-name.done{color:var(--text-3);text-decoration:line-through}
+.tl-date-row{display:flex;align-items:center;gap:8px;margin-top:3px;flex-wrap:wrap}
+.tl-date{font-size:12px;color:var(--text-3)}
+.tl-del{opacity:0;background:none;border:none;cursor:pointer;color:var(--text-3);font-size:16px;padding:0 2px;border-radius:3px}
+.tl-item:hover .tl-del{opacity:1}
+.tl-del:hover{color:var(--red)}
+
+/* ── Tasks (detail) ── */
+.task-list{display:flex;flex-direction:column;gap:2px}
+.task-item{display:flex;align-items:center;gap:6px;padding:7px 4px;border-radius:var(--r-sm);transition:background .12s}
+.task-item:hover{background:var(--surface-2)}
+.task-cb{width:16px;height:16px;border:1.5px solid var(--border-2);border-radius:4px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.task-cb.checked{background:var(--green);border-color:var(--green)}
+.task-cb.checked::after{content:'';display:block;width:8px;height:5px;border-left:1.5px solid #fff;border-bottom:1.5px solid #fff;transform:rotate(-45deg) translateY(-1px)}
+.task-text{font-size:13.5px;color:var(--text);line-height:1.45}
+.task-text.done{color:var(--text-3);text-decoration:line-through}
+.task-actions{display:flex;align-items:center;gap:2px;margin-left:auto;flex-shrink:0}
+.task-del{opacity:0;background:none;border:none;cursor:pointer;color:var(--text-3);padding:3px;border-radius:3px;display:flex;align-items:center;transition:opacity .12s}
+.task-item:hover .task-del{opacity:1}
+.task-del:hover{color:var(--red)}
+.task-add-row{display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.task-input{flex:1;font-size:13px;padding:7px 10px;border:1px solid var(--border-2);border-radius:var(--r-md);background:transparent;color:var(--text);font-family:inherit;transition:border-color .15s}
+.task-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.1)}
+.task-input::placeholder{color:var(--text-3)}
+.notes-area{width:100%;font-size:13px;padding:10px 12px;border:1px solid var(--border-2);border-radius:var(--r-md);background:transparent;color:var(--text);font-family:inherit;resize:vertical;min-height:90px;line-height:1.6;transition:border-color .15s}
+.notes-area:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.1)}
+.notes-area::placeholder{color:var(--text-3)}
+.ms-add-form{display:none;padding-top:12px;margin-top:12px;border-top:1px solid var(--border);gap:8px;flex-wrap:wrap;align-items:flex-end}
+.ms-add-form.open{display:flex}
+.ms-add-form input{font-size:13px;padding:6px 10px;border:1px solid var(--border-2);border-radius:var(--r-md);background:transparent;color:var(--text);font-family:inherit}
+.ms-add-form input:focus{outline:none;border-color:var(--accent)}
+.ms-name-input{flex:1;min-width:120px}
+
+/* ── Itinerary ── */
+.live-banner{background:linear-gradient(135deg,var(--accent-lite),var(--surface));border:1px solid rgba(99,102,241,.3);border-radius:var(--r-lg);padding:16px 20px;margin-bottom:20px}
+.live-banner-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.25);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(99,102,241,.25)}50%{box-shadow:0 0 0 6px rgba(99,102,241,.1)}}
+.live-banner-title{font-size:14px;font-weight:600;color:var(--accent-text)}
+.live-banner-events{display:flex;flex-direction:column;gap:6px}
+.live-event-row{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface);border-radius:var(--r-sm);border:1px solid var(--border)}
+.live-event-icon{font-size:16px;flex-shrink:0;width:24px;text-align:center}
+.live-event-time{font-size:12px;color:var(--text-3);font-weight:500;flex-shrink:0;width:38px}
+.live-event-title{flex:1;font-size:13.5px;font-weight:500;color:var(--text)}
+.live-event-link{font-size:12px;color:var(--accent-text);text-decoration:none;font-weight:500;flex-shrink:0}
+.live-event-link:hover{text-decoration:underline}
+
+.itin-day{margin-bottom:12px}
+.itin-day-header{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);cursor:pointer;user-select:none;transition:background .12s}
+.itin-day-header:hover{background:var(--surface-2)}
+.itin-day-header.today{background:var(--accent-lite);border-color:rgba(99,102,241,.3)}
+.itin-day-num{font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;width:42px;flex-shrink:0}
+.itin-day-header.today .itin-day-num{color:var(--accent-text)}
+.itin-day-date{font-size:14px;font-weight:600;color:var(--text);flex:1}
+.itin-day-header.today .itin-day-date{color:var(--accent-text)}
+.itin-event-count{font-size:12px;color:var(--text-3)}
+.itin-today-badge{font-size:11px;font-weight:600;background:var(--accent);color:#fff;padding:2px 8px;border-radius:20px;letter-spacing:.03em}
+.itin-chevron{color:var(--text-3);transition:transform .2s;flex-shrink:0}
+.itin-chevron.open{transform:rotate(90deg)}
+
+.itin-day-body{display:none;background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r-md) var(--r-md);overflow:hidden}
+.itin-day-body.open{display:block}
+
+.itin-events{padding:8px 0}
+.itin-event{display:flex;align-items:flex-start;gap:0;padding:8px 14px;transition:background .12s;cursor:pointer;border-bottom:1px solid var(--border)}
+.itin-event:last-child{border-bottom:none}
+.itin-event:hover{background:var(--surface-2)}
+.itin-event-icon-col{width:32px;padding-top:1px;flex-shrink:0;font-size:16px;text-align:center}
+.itin-event-body{flex:1;min-width:0}
+.itin-event-header{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.itin-event-time{font-size:12px;color:var(--text-3);font-weight:500;flex-shrink:0}
+.itin-event-title{font-size:13.5px;font-weight:500;color:var(--text)}
+.itin-event-details{font-size:12.5px;color:var(--text-2);margin-top:3px;line-height:1.5;white-space:pre-wrap}
+.itin-event-link-btn{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--accent-text);font-weight:500;margin-top:4px;text-decoration:none;padding:2px 0}
+.itin-event-link-btn:hover{text-decoration:underline}
+.itin-event-actions{display:flex;gap:4px;flex-shrink:0;opacity:0;transition:opacity .12s;padding-top:1px}
+.itin-event:hover .itin-event-actions{opacity:1}
+
+.itin-empty{padding:16px 14px;font-size:13px;color:var(--text-3);font-style:italic}
+.itin-add-row{padding:8px 14px 10px;border-top:1px solid var(--border)}
+
+/* ── Modal ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(2px)}
+.modal-bg.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:24px;width:min(480px,94vw);box-shadow:var(--sh-md);max-height:90vh;overflow-y:auto}
+.modal h2{font-size:16px;font-weight:600;color:var(--text);margin-bottom:18px;letter-spacing:-.2px}
+.form-field{margin-bottom:14px}
+.form-field label{display:block;font-size:12px;font-weight:500;color:var(--text-2);margin-bottom:5px}
+.form-field input,.form-field textarea,.form-field select{width:100%;font-size:13px;padding:8px 11px;border:1px solid var(--border-2);border-radius:var(--r-md);background:var(--surface);color:var(--text);font-family:inherit;transition:border-color .15s}
+.form-field input:focus,.form-field textarea:focus,.form-field select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.1)}
+.color-picker{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.color-swatch{width:24px;height:24px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:transform .1s,border-color .1s}
+.color-swatch:hover{transform:scale(1.15)}
+.color-swatch.selected{border-color:var(--text);transform:scale(1.1)}
+.icon-picker{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.icon-opt{width:34px;height:34px;border:1.5px solid var(--border);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:all .12s}
+.icon-opt:hover{border-color:var(--border-2);background:var(--surface-2)}
+.icon-opt.selected{border-color:var(--accent);background:var(--accent-lite)}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+.modal-actions-split{display:flex;justify-content:space-between;align-items:center;margin-top:20px}
+.divider{height:1px;background:var(--border);margin:14px 0}
+
+/* ── Project type toggle ── */
+.type-toggle{display:flex;gap:6px;margin-top:6px}
+.type-opt{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--r-md);cursor:pointer;font-size:13px;font-weight:500;color:var(--text-2);background:var(--surface);font-family:inherit;transition:all .12s}
+.type-opt:hover{border-color:var(--border-2);color:var(--text)}
+.type-opt.active{border-color:var(--accent);background:var(--accent-lite);color:var(--accent-text)}
+
+/* ── Event type picker ── */
+.event-type-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}
+.ev-type-opt{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border:1.5px solid var(--border);border-radius:var(--r-md);cursor:pointer;font-size:11px;font-weight:500;color:var(--text-2);background:var(--surface);transition:all .12s}
+.ev-type-opt:hover{border-color:var(--border-2);background:var(--surface-2)}
+.ev-type-opt.selected{border-color:var(--accent);background:var(--accent-lite);color:var(--accent-text)}
+.ev-type-opt span:first-child{font-size:20px}
+
+/* ── Itinerary view toggle ── */
+.itin-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.itin-view-toggle{display:flex;gap:2px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:2px}
+.itin-vbtn{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:6px;font-size:12.5px;font-weight:500;cursor:pointer;border:none;background:none;color:var(--text-3);font-family:inherit;transition:all .12s}
+.itin-vbtn:hover{color:var(--text-2)}
+.itin-vbtn.active{background:var(--surface);color:var(--text);box-shadow:var(--sh-sm)}
+
+/* ── Calendar view ── */
+.itin-cal-wrap{border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;background:var(--surface)}
+.itin-cal-hdr-outer{display:flex;border-bottom:2px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:4}
+.itin-cal-hdr-gutter{width:52px;flex-shrink:0;border-right:1px solid var(--border);padding:10px 6px;display:flex;align-items:flex-end;justify-content:flex-end}
+.itin-cal-hdr-gutter span{font-size:10px;color:var(--text-3);font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+.itin-cal-hdr-scroll{flex:1;overflow:hidden}
+.itin-cal-hdr-inner{display:flex}
+.itin-cal-hdr-day{flex-shrink:0;padding:10px 12px;border-right:1px solid var(--border);cursor:default}
+.itin-cal-hdr-day.today{background:var(--accent-lite)}
+.itin-cal-hdr-daynum{font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+.itin-cal-hdr-day.today .itin-cal-hdr-daynum{color:var(--accent-text)}
+.itin-cal-hdr-daydate{font-size:13px;font-weight:600;color:var(--text)}
+.itin-cal-hdr-day.today .itin-cal-hdr-daydate{color:var(--accent-text)}
+
+.itin-cal-body-outer{display:flex;overflow-x:auto;overflow-y:visible}
+.itin-cal-time-col{width:52px;flex-shrink:0;position:sticky;left:0;background:var(--surface);border-right:1px solid var(--border);z-index:2}
+.itin-cal-time-inner{position:relative}
+.itin-cal-time-label{position:absolute;right:6px;font-size:11px;color:var(--text-3);white-space:nowrap;transform:translateY(-7px);user-select:none}
+.itin-cal-days-area{display:flex;flex:1}
+.itin-cal-day-col{flex-shrink:0;border-right:1px solid var(--border);cursor:pointer;position:relative}
+.itin-cal-day-col.today{background:rgba(99,102,241,.025)}
+.itin-cal-day-inner{position:relative}
+.itin-cal-hour-line{position:absolute;left:0;right:0;border-top:1px solid var(--border);pointer-events:none}
+.itin-cal-half-line{position:absolute;left:0;right:0;border-top:1px dashed var(--border);opacity:.6;pointer-events:none}
+.itin-cal-event-block{position:absolute;left:4px;right:4px;border-radius:6px;padding:4px 8px;cursor:pointer;overflow:hidden;transition:filter .12s;min-height:24px}
+.itin-cal-event-block:hover{filter:brightness(.92)}
+.itin-cal-event-icon{font-size:11px;margin-right:3px}
+.itin-cal-event-time{font-size:11px;opacity:.85;margin-bottom:1px;font-weight:500}
+.itin-cal-event-title{font-size:12px;font-weight:600;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.itin-cal-now-line{position:absolute;left:0;right:0;height:2px;background:var(--red);pointer-events:none;z-index:3}
+.itin-cal-now-dot{position:absolute;left:-4px;top:-4px;width:10px;height:10px;border-radius:50%;background:var(--red)}
+.itin-cal-click-overlay{position:absolute;inset:0;z-index:0}
+/* untimed events strip */
+.itin-cal-untimed{border-bottom:1px solid var(--border);padding:4px 4px;display:flex;flex-direction:column;gap:3px;min-height:4px;background:var(--surface-2)}
+.itin-cal-untimed-ev{border-radius:4px;padding:3px 7px;font-size:12px;font-weight:500;cursor:pointer;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;transition:filter .12s}
+.itin-cal-untimed-ev:hover{filter:brightness(.92)}
+
+/* ── Event links ── */
+.ev-link-row{display:flex;gap:6px;margin-bottom:6px;align-items:center}
+.ev-link-label{width:110px;flex-shrink:0;font-size:12.5px;padding:6px 9px;border:1px solid var(--border-2);border-radius:var(--r-md);background:var(--surface);color:var(--text);font-family:inherit;transition:border-color .15s}
+.ev-link-label:focus{outline:none;border-color:var(--accent)}
+.ev-link-label::placeholder{color:var(--text-3)}
+.ev-link-url{flex:1;font-size:12.5px;padding:6px 9px;border:1px solid var(--border-2);border-radius:var(--r-md);background:var(--surface);color:var(--text);font-family:inherit;transition:border-color .15s}
+.ev-link-url:focus{outline:none;border-color:var(--accent)}
+.ev-link-url::placeholder{color:var(--text-3)}
+.ev-link-del{background:none;border:none;cursor:pointer;color:var(--text-3);padding:4px;border-radius:3px;flex-shrink:0;display:flex;align-items:center;transition:color .12s}
+.ev-link-del:hover{color:var(--red)}
+.itin-event-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}
+.itin-event-link-chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--accent-text);font-weight:500;text-decoration:none;background:var(--accent-lite);padding:2px 8px;border-radius:10px}
+.itin-event-link-chip:hover{text-decoration:underline}
+
+/* ── Import ── */
+.import-drop{border:2px dashed var(--border-2);border-radius:var(--r-md);padding:24px;text-align:center;cursor:pointer;transition:all .15s;font-size:13px;color:var(--text-3)}
+.import-drop:hover,.import-drop.drag{border-color:var(--accent);background:var(--accent-lite);color:var(--accent-text)}
+.import-result{margin-top:10px;font-size:12.5px;color:var(--text-2);display:none}
+
+/* ── Empty ── */
+.empty{text-align:center;padding:48px 24px;color:var(--text-3)}
+.empty-icon{font-size:36px;margin-bottom:12px;opacity:.5}
+.empty-title{font-size:14px;font-weight:500;color:var(--text-2);margin-bottom:4px}
+.empty-sub{font-size:12.5px}
+
+/* ── Responsive ── */
+@media(max-width:768px){
+  .sidebar{display:none}
+  .content{padding:16px}
+  .project-grid{grid-template-columns:1fr}
+  .stats-strip{grid-template-columns:repeat(3,1fr)}
+  .stat-value{font-size:18px}
+  .pft-meta{display:none}
+  .pft-progress-wrap{display:none}
+}
+
+/* ── Task view toggle ── */
+.task-view-toggle{display:flex;gap:2px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:2px}
+.tvt-btn{padding:3px 10px;border-radius:6px;font-size:11.5px;font-weight:500;cursor:pointer;border:none;background:none;color:var(--text-3);font-family:inherit;transition:all .12s;white-space:nowrap}
+.tvt-btn:hover{color:var(--text-2)}
+.tvt-btn.active{background:var(--surface);color:var(--text);box-shadow:var(--sh-sm)}
+
+/* ── Milestone task groups ── */
+.task-ms-group{margin-bottom:6px}
+.task-ms-header{display:flex;align-items:center;gap:8px;padding:6px 4px;border-radius:var(--r-sm);cursor:pointer;user-select:none}
+.task-ms-header:hover{background:var(--surface-2)}
+.task-ms-chevron{color:var(--text-3);transition:transform .18s;flex-shrink:0}
+.task-ms-chevron.open{transform:rotate(90deg)}
+.task-ms-name{font-size:12.5px;font-weight:600;color:var(--text-2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.task-ms-date{font-size:11.5px;color:var(--text-3);flex-shrink:0}
+.task-ms-count{font-size:11.5px;color:var(--text-3);flex-shrink:0;min-width:28px;text-align:right}
+.task-ms-tasks{padding-left:8px;border-left:2px solid var(--border);margin-left:6px}
+.task-ms-none .task-ms-name{color:var(--text-3);font-weight:500}
+
+/* ── Task drag-and-drop ── */
+.task-item-wrap{display:flex;flex-direction:column;border-radius:var(--r-sm)}
+.task-item-wrap.drag-over{outline:2px solid var(--accent);outline-offset:-2px;border-radius:var(--r-sm)}
+.task-drag-handle{opacity:0;cursor:grab;color:var(--text-3);padding:0 3px;flex-shrink:0;display:flex;align-items:center;transition:opacity .12s;touch-action:none}
+.task-item:hover .task-drag-handle{opacity:1}
+.task-drag-handle:hover{color:var(--text-2)}
+.task-item-wrap:hover .task-item{background:var(--surface-2)}
+.task-item:hover{background:transparent!important}
+.task-expand-btn{background:none;border:none;cursor:pointer;color:var(--text-3);padding:3px;border-radius:3px;opacity:.35;transition:opacity .12s;flex-shrink:0;display:flex;align-items:center;line-height:1}
+.task-expand-btn svg{transition:transform .2s}
+.task-expand-btn.open svg{transform:rotate(90deg)}
+.task-item:hover .task-expand-btn,.task-item:hover .task-del,.task-expand-btn.open{opacity:1}
+.task-sub-count{font-size:11px;font-weight:600;background:var(--accent-lite);color:var(--accent-text);padding:1px 7px;border-radius:10px;flex-shrink:0}
+.task-drawer{display:none;margin:0 2px 4px;background:var(--surface-2);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r-md) var(--r-md)}
+.task-drawer.open{display:block}
+.task-drawer-inner{padding:10px 12px;display:flex;flex-direction:column;gap:9px}
+.td-notes{width:100%;font-size:12.5px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);color:var(--text);font-family:inherit;resize:none;min-height:56px;line-height:1.5;transition:border-color .15s}
+.td-notes:focus{outline:none;border-color:var(--accent)}
+.td-notes::placeholder{color:var(--text-3)}
+.td-items{display:flex;flex-direction:column;gap:3px}
+.sub-item{display:flex;align-items:center;gap:7px;padding:3px 0}
+.sub-status{font-size:11px;font-weight:600;padding:2px 7px;border-radius:10px;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .12s;user-select:none;border:1px solid transparent}
+.sub-status-option{background:var(--surface);border-color:var(--border-2);color:var(--text-3)}
+.sub-status-considering{background:var(--amber-bg);color:var(--amber-t)}
+.sub-status-booked{background:var(--green-bg);color:var(--green-t)}
+.sub-status-rejected{background:var(--red-bg);color:var(--red-t)}
+.sub-item-text-input{flex:1;font-size:13px;color:var(--text);min-width:0;background:transparent;border:1px solid transparent;border-radius:var(--r-sm);padding:1px 4px;font-family:inherit;transition:border-color .15s,background .15s}
+.sub-item-text-input:hover{border-color:var(--border);background:var(--surface)}
+.sub-item-text-input:focus{outline:none;border-color:var(--accent);background:var(--surface)}
+.sub-item-text-input::placeholder{color:var(--text-3)}
+.sub-item-text-input.rejected{color:var(--text-3);text-decoration:line-through}
+.sub-item-link-btn{font-size:12px;color:var(--accent-text);text-decoration:none;flex-shrink:0}
+.sub-item-link-btn:hover{text-decoration:underline}
+.sub-item-del{opacity:0;background:none;border:none;cursor:pointer;color:var(--text-3);font-size:15px;padding:0 2px;line-height:1;border-radius:3px;flex-shrink:0;transition:opacity .12s}
+.sub-item:hover .sub-item-del{opacity:1}
+.sub-item-del:hover{color:var(--red)}
+.sub-item-link-input{flex:1;min-width:0;font-size:12px;padding:2px 6px;border:1px solid transparent;border-radius:var(--r-sm);background:transparent;color:var(--text);font-family:inherit;transition:border-color .15s,background .15s}
+.sub-item-link-input:hover{border-color:var(--border);background:var(--surface)}
+.sub-item-link-input:focus{outline:none;border-color:var(--accent);background:var(--surface)}
+.sub-item-link-input::placeholder{color:var(--text-3)}
+.td-name-input{font-size:14px;font-weight:500;color:var(--text);background:transparent;border:1px solid transparent;border-radius:var(--r-sm);padding:3px 6px;font-family:inherit;width:100%;margin-bottom:2px;transition:border-color .15s,background .15s}
+.td-name-input:hover{border-color:var(--border);background:var(--surface)}
+.td-name-input:focus{outline:none;border-color:var(--accent);background:var(--surface)}
+.td-add-row{display:flex;gap:5px;align-items:center}
+.td-item-input{flex:1;font-size:12.5px;padding:5px 8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);color:var(--text);font-family:inherit;transition:border-color .15s}
+.td-item-input:focus{outline:none;border-color:var(--accent)}
+.td-item-input::placeholder{color:var(--text-3)}
+.td-link-input{flex:1;font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);color:var(--text);font-family:inherit;transition:border-color .15s;min-width:0}
+.td-link-input:focus{outline:none;border-color:var(--accent)}
+.td-link-input::placeholder{color:var(--text-3)}
+.td-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:6px;border-top:1px solid var(--border)}
+.td-pslot{display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--accent-lite);border-radius:var(--r-sm);margin-top:6px}
+.td-pslot-label{font-size:12px;color:var(--accent-text);flex:1}
+.td-pslot-form{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:6px;padding:6px 8px;background:var(--surface-2);border-radius:var(--r-sm);border:1px dashed var(--border-2)}
+.td-pslot-form input[type=date]{font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);color:var(--text);font-family:inherit}
+.itin-potential-row{display:flex;align-items:center;gap:8px;padding:8px 12px;border:1.5px dashed var(--border-2);border-radius:var(--r-sm);opacity:.7;cursor:pointer;transition:opacity .12s}
+.itin-potential-row:hover{opacity:1}
+.itin-potential-icon{font-size:15px;flex-shrink:0}
+.itin-potential-text{font-size:13px;color:var(--text-2);flex:1}
+.itin-potential-note{font-size:11.5px;color:var(--text-3)}
+.td-event-link{font-size:12px;color:var(--accent-text);cursor:pointer;font-weight:500;padding:4px 8px;background:var(--accent-lite);border-radius:var(--r-sm);display:inline-flex;align-items:center;gap:5px}
+.td-event-link:hover{text-decoration:underline}
+
+/* ── Event row — linked task ── */
+.itin-event-task-badge{font-size:11px;color:var(--accent-text);background:var(--accent-lite);padding:2px 7px;border-radius:10px;cursor:pointer;white-space:nowrap;flex-shrink:0;font-weight:500;border:none}
+.itin-event-task-badge:hover{text-decoration:underline}
+.itin-event.placeholder .itin-event-icon-col{opacity:.5}
+.itin-event.placeholder{border-left:3px dashed var(--border-2);opacity:.8}
+.itin-cal-event-block.placeholder{border:2px dashed rgba(255,255,255,.55)!important}
+
+/* ── Planner edit btn ── */
+.planner-edit{display:none;position:absolute;right:28px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-3);font-size:14px;line-height:1;padding:2px 4px;border-radius:4px}
+.planner-edit:hover{color:var(--accent-text)}
+.planner-item:hover .planner-edit{display:flex;align-items:center}
+</style>
+</head>
+<body>
+
+<!-- ══════ SIDEBAR ══════ -->
+<nav class="sidebar">
+  <div class="sb-header">
+    <div class="app-logo">tu</div>
+    <span class="app-name">tudu</span>
+  </div>
+  <div class="sb-section">Planners</div>
+  <div id="sidebar-planners"></div>
+  <button class="sb-add-btn" onclick="openModal('modal-new-planner')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    New planner
+  </button>
+  <div class="sb-footer">
+    <div class="user-chip">
+      <div class="avatar" style="background:#6366F1">Me</div>
+      <div class="user-info">
+        <div class="user-name">My Account</div>
+        <div class="user-role">Owner</div>
+      </div>
+    </div>
+    <div class="sb-data-btns">
+      <button class="sb-data-btn" onclick="exportData()">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v6.5M4 5.5L6 7.5 8 5.5M1.5 9.5h9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Export
+      </button>
+      <button class="sb-data-btn" onclick="openModal('modal-import')">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 8V1.5M4 4L6 2 8 4M1.5 9.5h9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Import
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ══════ MAIN ══════ -->
+<div class="main">
+  <div class="topbar">
+    <div class="breadcrumb">
+      <span class="bc-link" id="bc-planner" onclick="showList()"></span>
+      <span class="bc-sep" id="bc-sep" style="display:none">›</span>
+      <span class="bc-current" id="bc-current" style="display:none"></span>
+    </div>
+    <div class="tb-actions">
+      <button class="btn btn-sm" id="topbar-export-md-btn" style="display:none" onclick="exportProjectMarkdown()" title="Export project as Markdown">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="1" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M3.5 8.5V5l1.5 2 1.5-2v3.5M8 5v3.5M10 7H8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Export MD
+      </button>
+      <button class="btn btn-primary btn-sm" id="topbar-new-btn" onclick="openNewProjectModal()">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        New project
+      </button>
+    </div>
+  </div>
+
+  <!-- LIST VIEW -->
+  <div id="view-list" class="content">
+    <div class="page-header">
+      <div>
+        <div class="page-title" id="planner-title"></div>
+        <div class="page-subtitle" id="planner-sub"></div>
+      </div>
+      <div class="view-toggle">
+        <button class="view-btn active" id="vbtn-grid" onclick="setViewMode('grid')" title="Grid view">
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1" y="1" width="5.5" height="5.5" rx="1.2" stroke="currentColor" stroke-width="1.3"/><rect x="8.5" y="1" width="5.5" height="5.5" rx="1.2" stroke="currentColor" stroke-width="1.3"/><rect x="1" y="8.5" width="5.5" height="5.5" rx="1.2" stroke="currentColor" stroke-width="1.3"/><rect x="8.5" y="8.5" width="5.5" height="5.5" rx="1.2" stroke="currentColor" stroke-width="1.3"/></svg>
+        </button>
+        <button class="view-btn" id="vbtn-full" onclick="setViewMode('full')" title="Full view">
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1" y="1.5" width="13" height="3.5" rx="1.2" stroke="currentColor" stroke-width="1.3"/><rect x="1" y="7" width="13" height="3.5" rx="1.2" stroke="currentColor" stroke-width="1.3"/><rect x="1" y="12.5" width="7" height="1" rx=".5" stroke="currentColor" stroke-width="1.3"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="stats-strip" id="stats-strip"></div>
+    <div class="project-grid" id="project-grid"></div>
+    <div class="project-full-list" id="project-full-list" style="display:none"></div>
+  </div>
+
+  <!-- DETAIL VIEW -->
+  <div id="view-detail" class="content" style="display:none">
+    <!-- Header card (all project types) -->
+    <div class="detail-header-card" id="dh-card">
+      <div class="dh-top">
+        <div style="min-width:0;flex:1">
+          <div class="dh-title" id="dh-title"></div>
+          <div class="dh-desc" id="dh-desc"></div>
+          <div class="dh-meta" id="dh-meta"></div>
+        </div>
+        <div class="progress-ring-wrap">
+          <svg width="68" height="68" style="transform:rotate(-90deg)">
+            <circle cx="34" cy="34" r="27" fill="none" stroke="var(--border)" stroke-width="5"/>
+            <circle cx="34" cy="34" r="27" fill="none" stroke="var(--accent)" stroke-width="5"
+              stroke-linecap="round" id="ring-circle" stroke-dasharray="169.6" stroke-dashoffset="169.6"/>
+          </svg>
+          <div class="ring-pct" id="ring-pct">0%</div>
+          <div class="ring-sub" id="ring-sub">tasks done</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab bar (trips only) -->
+    <div class="detail-tabs" id="detail-tabs" style="display:none">
+      <button class="detail-tab active" data-tab="planning" onclick="switchDetailTab('planning')">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="1" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M4 5h5M4 7.5h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        Planning
+      </button>
+      <button class="detail-tab" data-tab="itinerary" onclick="switchDetailTab('itinerary')">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 6.5h11M6.5 1v11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.3"/></svg>
+        Itinerary
+      </button>
+    </div>
+
+    <!-- Planning tab content -->
+    <div id="detail-planning">
+      <div class="detail-layout">
+        <div class="detail-main">
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title">Milestones</span>
+              <button class="btn btn-sm" onclick="toggleMsForm()">+ Add</button>
+            </div>
+            <div class="timeline" id="d-milestones"></div>
+            <div class="ms-add-form" id="ms-add-form">
+              <input class="ms-name-input" id="ms-name-input" placeholder="Milestone name…"
+                onkeydown="if(event.key==='Enter')document.getElementById('ms-date-input').focus()">
+              <input type="date" id="ms-date-input" style="width:140px"
+                onkeydown="if(event.key==='Enter')addMilestone()">
+              <button class="btn btn-sm btn-primary" onclick="addMilestone()">Add</button>
+              <button class="btn btn-sm btn-ghost" onclick="toggleMsForm()">Cancel</button>
+            </div>
+          </div>
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title">Tasks</span>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span id="d-task-count" style="font-size:12px;color:var(--text-3)"></span>
+                <div class="task-view-toggle">
+                  <button class="tvt-btn active" id="tvt-all" onclick="setTaskGroupMode('all')">All</button>
+                  <button class="tvt-btn" id="tvt-ms" onclick="setTaskGroupMode('milestone')">By milestone</button>
+                </div>
+                <button class="tvt-btn" id="tvt-hide-done" onclick="toggleHideDone()" style="border:1px solid var(--border);border-radius:6px;padding:3px 8px">Hide done</button>
+              </div>
+            </div>
+            <div class="task-list" id="d-tasks"></div>
+            <div class="task-add-row">
+              <input class="task-input" id="d-task-input" placeholder="Add a task…"
+                onkeydown="if(event.key==='Enter')addDetailTask()">
+              <button class="btn btn-sm" onclick="addDetailTask()">Add</button>
+            </div>
+          </div>
+          <div class="section">
+            <div class="section-header"><span class="section-title">Notes</span></div>
+            <textarea class="notes-area" id="d-notes" placeholder="Any notes, links, or context…" oninput="saveNotes()"></textarea>
+          </div>
+        </div>
+        <div class="detail-sidebar">
+          <div class="section">
+            <div class="section-header"><span class="section-title">Deadline</span></div>
+            <div id="d-deadline-display"></div>
+          </div>
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title">Project</span>
+              <button class="btn btn-ghost btn-sm" onclick="openEditProjectModalFor(activeProjectId)">Edit</button>
+            </div>
+            <div id="d-project-meta" style="font-size:13px;color:var(--text-2)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Itinerary tab content (trips only) -->
+    <div id="detail-itinerary" style="display:none">
+      <div class="itin-toolbar">
+        <div id="live-banner-inline"></div>
+        <div class="itin-view-toggle">
+          <button class="itin-vbtn active" id="ivbtn-list" onclick="setItinView('list')">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="1.5" width="11" height="2.5" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="1" y="5.5" width="11" height="2.5" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="1" y="9.5" width="7" height="2.5" rx="1" stroke="currentColor" stroke-width="1.2"/></svg>
+            List
+          </button>
+          <button class="itin-vbtn" id="ivbtn-cal" onclick="setItinView('calendar')">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="2" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M1 5h11M4.5 1v2M8.5 1v2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            Timeline
+          </button>
+        </div>
+      </div>
+      <div id="live-banner"></div>
+      <div id="itinerary-days"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ MODALS ══════ -->
+
+<!-- New planner -->
+<div class="modal-bg" id="modal-new-planner">
+  <div class="modal">
+    <h2>New planner</h2>
+    <div class="form-field">
+      <label>Name</label>
+      <input id="np-name" placeholder="e.g. Home, Work, Side Projects"
+        onkeydown="if(event.key==='Enter')createPlanner()">
+    </div>
+    <div class="form-field">
+      <label>Icon</label>
+      <div class="icon-picker" id="np-icon-picker"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-new-planner')">Cancel</button>
+      <button class="btn btn-primary" onclick="createPlanner()">Create planner</button>
+    </div>
+  </div>
+</div>
+
+<!-- New / Edit project -->
+<div class="modal-bg" id="modal-project">
+  <div class="modal">
+    <h2 id="modal-project-title">New project</h2>
+    <div class="form-field">
+      <label>Type</label>
+      <div class="type-toggle">
+        <button class="type-opt active" id="type-opt-default" onclick="setProjectType('default')">
+          📋 Default
+        </button>
+        <button class="type-opt" id="type-opt-trip" onclick="setProjectType('trip')">
+          ✈️ Trip
+        </button>
+      </div>
+    </div>
+    <div class="form-field">
+      <label>Name</label>
+      <input id="proj-name" placeholder="e.g. Italy Holiday">
+    </div>
+    <div class="form-field">
+      <label>Description</label>
+      <input id="proj-desc" placeholder="One-line summary">
+    </div>
+    <!-- Default fields -->
+    <div id="proj-default-fields">
+      <div class="form-field">
+        <label>Deadline (optional)</label>
+        <input type="date" id="proj-deadline">
+      </div>
+    </div>
+    <!-- Trip fields -->
+    <div id="proj-trip-fields" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="form-field" style="margin-bottom:0">
+          <label>Departure date</label>
+          <input type="date" id="proj-departure" oninput="onDepartureDateChange()">
+        </div>
+        <div class="form-field" style="margin-bottom:0">
+          <label>Return date</label>
+          <input type="date" id="proj-return" oninput="onReturnDateChange()">
+        </div>
+      </div>
+      <div style="height:14px"></div>
+    </div>
+    <div class="form-field">
+      <label>Colour</label>
+      <div class="color-picker" id="proj-color-picker"></div>
+    </div>
+    <div class="modal-actions-split">
+      <button class="btn btn-danger btn-sm" id="proj-delete-btn" onclick="deleteCurrentProject()" style="display:none">Delete project</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="closeModal('modal-project')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveProject()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add / Edit event -->
+<div class="modal-bg" id="modal-event">
+  <div class="modal">
+    <h2 id="modal-event-title">Add event</h2>
+    <div class="form-field">
+      <label>Type</label>
+      <div class="event-type-grid" id="event-type-grid"></div>
+    </div>
+    <!-- Day selector — shown when adding from planning tab -->
+    <div class="form-field" id="ev-day-field" style="display:none">
+      <label>Day</label>
+      <select id="ev-day-select" style="width:100%"></select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr auto auto;gap:10px;margin-bottom:14px;align-items:end">
+      <div class="form-field" style="margin-bottom:0">
+        <label>Title</label>
+        <input id="ev-title" placeholder="e.g. Flight LHR → FCO">
+      </div>
+      <div class="form-field" style="margin-bottom:0">
+        <label>Start time</label>
+        <input type="time" id="ev-time" style="width:110px" oninput="onEvTimeChange()">
+      </div>
+      <div class="form-field" id="ev-endtime-field" style="margin-bottom:0;display:none">
+        <label>End time</label>
+        <input type="time" id="ev-endtime" style="width:110px">
+      </div>
+    </div>
+    <div class="form-field">
+      <label>Details</label>
+      <textarea id="ev-details" rows="3" placeholder="Confirmation code, address, booking ref…" style="resize:vertical"></textarea>
+    </div>
+    <div class="form-field">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <label style="margin-bottom:0">Links</label>
+        <button class="btn btn-ghost btn-sm" onclick="addModalLink()">+ Add link</button>
+      </div>
+      <div id="ev-links-list"></div>
+    </div>
+    <!-- Linked task row — shown when editing event with linked task -->
+    <div id="ev-linked-task-row" style="display:none;margin-bottom:14px;align-items:center;gap:8px">
+      <span style="font-size:12px;color:var(--text-2)">Linked task:</span>
+      <span id="ev-linked-task-text" style="font-size:12px;font-weight:500;color:var(--accent-text);flex:1"></span>
+      <button class="btn btn-ghost btn-sm" onclick="unlinkEventFromTask()">Unlink</button>
+    </div>
+    <div class="modal-actions-split">
+      <button class="btn btn-danger btn-sm" id="ev-delete-btn" onclick="deleteCurrentEvent()" style="display:none">Delete</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="closeModal('modal-event')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveEvent()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit planner -->
+<div class="modal-bg" id="modal-edit-planner">
+  <div class="modal">
+    <h2>Edit planner</h2>
+    <div class="form-field">
+      <label>Name</label>
+      <input id="ep-name" placeholder="Planner name"
+        onkeydown="if(event.key==='Enter')savePlannerEdits()">
+    </div>
+    <div class="form-field">
+      <label>Icon</label>
+      <div class="icon-picker" id="ep-icon-picker"></div>
+    </div>
+    <div class="modal-actions-split">
+      <button class="btn btn-danger btn-sm" onclick="deletePlannerFromModal()">Delete planner</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="closeModal('modal-edit-planner')">Cancel</button>
+        <button class="btn btn-primary" onclick="savePlannerEdits()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Import -->
+<div class="modal-bg" id="modal-import">
+  <div class="modal">
+    <h2>Import data</h2>
+    <p style="font-size:13px;color:var(--text-2);margin-bottom:14px;line-height:1.6">
+      Import a previously exported <code style="font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px">tudu-export.json</code> file.
+      Planners are merged — existing data is kept.
+    </p>
+    <div class="import-drop" id="import-drop" onclick="document.getElementById('import-file').click()">
+      <div style="font-size:24px;margin-bottom:8px">📂</div>
+      Click to choose a file, or drag &amp; drop here
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="handleImportFile(this)">
+    </div>
+    <div class="import-result" id="import-result"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-import')">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// STORE
+// ══════════════════════════════════════
+const STORAGE_KEY = 'tudu_v1';
+function getData() {
+  try { const r = localStorage.getItem(STORAGE_KEY); if (r) return JSON.parse(r); } catch(e) {}
+  return { planners: [] };
+}
+function updateData(fn) {
+  const d = getData(); fn(d); localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
+}
+
+// ══════════════════════════════════════
+// CONSTANTS
+// ══════════════════════════════════════
+const COLORS = {
+  indigo:{ hex:'#6366F1', light:'#EEF2FF' },
+  violet:{ hex:'#7C3AED', light:'#F5F3FF' },
+  blue:  { hex:'#2563EB', light:'#DBEAFE' },
+  teal:  { hex:'#0D9488', light:'#F0FDFA' },
+  green: { hex:'#16A34A', light:'#F0FDF4' },
+  amber: { hex:'#D97706', light:'#FFFBEB' },
+  orange:{ hex:'#EA580C', light:'#FFF7ED' },
+  pink:  { hex:'#DB2777', light:'#FDF2F8' },
+};
+const COLOR_KEYS = Object.keys(COLORS);
+
+const PLANNER_ICONS = ['🏠','💼','🔧','🌱','✈️','📚','🎯','🏋️','🎨','🎵','🍳','🐾','❤️','⭐','🏡','🏢'];
+
+const EVENT_TYPES = {
+  flight:     { icon:'✈️',  label:'Flight'      },
+  hotel:      { icon:'🏨',  label:'Hotel'       },
+  car:        { icon:'🚗',  label:'Car hire'    },
+  transfer:   { icon:'🚌',  label:'Transfer'    },
+  tour:       { icon:'🎟️',  label:'Tour'        },
+  restaurant: { icon:'🍽️',  label:'Restaurant'  },
+  event:      { icon:'📅',  label:'Event'       },
+  note:       { icon:'📝',  label:'Note'        },
+};
+const EVENT_TYPE_KEYS = Object.keys(EVENT_TYPES);
+
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+let activePlannerId  = null;
+let activeProjectId  = null;
+let viewMode         = 'grid';
+let editingProjectId = null;
+let editingPlannerId = null;
+let selectedColor    = 'indigo';
+let selectedIcon     = PLANNER_ICONS[0];
+let selectedProjType = 'default';
+let currentDetailTab = 'planning';
+let itinView         = 'list';
+let addEventDay      = null;   // date string
+let editingEventId   = null;
+let selectedEvType   = 'flight';
+let addingFromTaskId = null;   // task ID when adding event from planning
+let modalLinks       = [];     // [{id,label,url}] — links being edited in the event modal
+let taskGroupMode    = 'all';  // 'all' | 'milestone'
+let hideDoneTasks    = false;
+const expandedTasks  = new Set();
+const collapsedMsGroups = new Set();
+
+// ══════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+function today() {
+  const d = new Date(); d.setHours(0,0,0,0); return d;
+}
+function dateOnly(s) {
+  const d = new Date(s); d.setHours(0,0,0,0); return d;
+}
+function daysUntil(s) { return Math.ceil((dateOnly(s) - today()) / 86400000); }
+
+function fmtDate(s)      { return new Date(s).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); }
+function fmtDateShort(s) { return new Date(s).toLocaleDateString('en-GB',{day:'numeric',month:'short'}); }
+function fmtDateFull(s)  { return new Date(s).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'long'}); }
+function fmtTime(t)      { return t ? t.slice(0,5) : ''; }
+
+function isoDate(d) {
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+function nextMilestone(p) {
+  return (p.milestones||[]).filter(m => daysUntil(m.date) >= 0)
+    .sort((a,b) => new Date(a.date)-new Date(b.date))[0] || null;
+}
+function statusBadge(days) {
+  if (days < 0)   return { cls:'badge-red',   label:'Overdue' };
+  if (days <= 14) return { cls:'badge-red',   label:days+'d' };
+  if (days <= 60) return { cls:'badge-amber', label:days+'d' };
+  return               { cls:'badge-green',  label:days+'d' };
+}
+
+// Trip-specific helpers
+function getTripPhase(p) {
+  if (p.type !== 'trip' || !p.departure) return null;
+  const t = today();
+  const dep = dateOnly(p.departure);
+  const ret = p.returnDate ? dateOnly(p.returnDate) : dep;
+  if (t < dep)  return 'planning';
+  if (t > ret)  return 'done';
+  return 'live';
+}
+
+function getTripDays(p) {
+  if (!p.departure) return [];
+  const dep = dateOnly(p.departure);
+  const ret = p.returnDate ? dateOnly(p.returnDate) : dep;
+  const saved = p.days || [];
+  const days = [];
+  for (let d = new Date(dep); d <= ret; d.setDate(d.getDate()+1)) {
+    const ds = isoDate(d);
+    const existing = saved.find(x => x.date === ds);
+    days.push(existing || { date: ds, events: [] });
+  }
+  return days;
+}
+
+function tripDaysCount(p) {
+  if (!p.departure || !p.returnDate) return null;
+  return Math.round((dateOnly(p.returnDate) - dateOnly(p.departure)) / 86400000) + 1;
+}
+
+function phaseBadge(phase) {
+  if (phase === 'live')     return `<span class="badge badge-green">● Live</span>`;
+  if (phase === 'done')     return `<span class="badge badge-neutral">Done</span>`;
+  return                           `<span class="badge badge-accent">Planning</span>`;
+}
+
+function getActivePlanner() { return getData().planners.find(x=>x.id===activePlannerId)||null; }
+function getActiveProject()  {
+  const pl = getActivePlanner();
+  return (pl?.projects||[]).find(x=>x.id===activeProjectId)||null;
+}
+
+// ══════════════════════════════════════
+// SIDEBAR
+// ══════════════════════════════════════
+function renderSidebar() {
+  const d = getData();
+  const el = document.getElementById('sidebar-planners');
+  if (!d.planners.length) {
+    el.innerHTML = `<div style="padding:8px 16px;font-size:12.5px;color:var(--text-3)">No planners yet</div>`;
+    return;
+  }
+  el.innerHTML = d.planners.map(pl => `
+    <div class="planner-item ${pl.id===activePlannerId?'active':''}" onclick="selectPlanner('${pl.id}')">
+      <div class="planner-icon">${pl.icon||'📋'}</div>
+      <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${pl.name}</span>
+      <span class="planner-count">${(pl.projects||[]).length}</span>
+      <button class="planner-edit" onclick="event.stopPropagation();openEditPlannerModal('${pl.id}')" title="Edit planner">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8.5 1.5L10.5 3.5 4 10H2v-2L8.5 1.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="planner-del" onclick="deletePlanner(event,'${pl.id}')">×</button>
+    </div>`).join('');
+}
+function selectPlanner(id) { activePlannerId = id; renderSidebar(); showList(); }
+
+// ══════════════════════════════════════
+// LIST VIEW
+// ══════════════════════════════════════
+function showList() {
+  document.getElementById('view-list').style.display = 'block';
+  document.getElementById('view-detail').style.display = 'none';
+  document.getElementById('bc-sep').style.display = 'none';
+  document.getElementById('bc-current').style.display = 'none';
+  document.getElementById('topbar-new-btn').style.display = '';
+  document.getElementById('topbar-export-md-btn').style.display = 'none';
+  activeProjectId = null;
+
+  const pl = getActivePlanner();
+  if (!pl) {
+    document.getElementById('planner-title').textContent = 'tudu';
+    document.getElementById('planner-sub').textContent = 'Select or create a planner';
+    document.getElementById('bc-planner').textContent = 'tudu';
+    document.getElementById('stats-strip').innerHTML = '';
+    document.getElementById('project-grid').innerHTML = `<div class="empty" style="grid-column:1/-1">
+      <div class="empty-icon">📋</div><div class="empty-title">No planner selected</div>
+      <div class="empty-sub">Create a planner in the sidebar</div></div>`;
+    document.getElementById('project-full-list').innerHTML = '';
+    return;
+  }
+
+  const projects = pl.projects || [];
+  const allTasks = projects.flatMap(p => p.tasks||[]);
+  const openTasks = allTasks.filter(t => !t.done).length;
+  const dueCount = projects.filter(p => {
+    if (p.type === 'trip') { const ph = getTripPhase(p); return ph === 'planning' && p.departure && daysUntil(p.departure) <= 30; }
+    return p.deadline && daysUntil(p.deadline) <= 30 && daysUntil(p.deadline) >= 0;
+  }).length;
+  const overallPct = allTasks.length ? Math.round(allTasks.filter(t=>t.done).length / allTasks.length * 100) : 0;
+
+  document.getElementById('planner-title').textContent = pl.name;
+  document.getElementById('bc-planner').textContent = pl.name;
+  document.getElementById('planner-sub').textContent =
+    `${projects.length} project${projects.length!==1?'s':''} · ${openTasks} task${openTasks!==1?'s':''} open`;
+  document.getElementById('stats-strip').innerHTML = `
+    <div class="stat-card"><div class="stat-value">${projects.length}</div><div class="stat-label">Projects</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--amber)">${dueCount}</div><div class="stat-label">Due this month</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--green)">${overallPct}%</div><div class="stat-label">Overall progress</div></div>`;
+
+  if (viewMode === 'grid') renderGrid(projects);
+  else renderFullView(projects);
+}
+
+// ══════════════════════════════════════
+// GRID VIEW
+// ══════════════════════════════════════
+function renderGrid(projects) {
+  document.getElementById('project-grid').style.display = '';
+  document.getElementById('project-full-list').style.display = 'none';
+  const grid = document.getElementById('project-grid');
+  if (!projects.length) {
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1">
+      <div class="empty-icon">✨</div><div class="empty-title">No projects yet</div>
+      <div class="empty-sub">Hit "New project" to get started</div></div>`;
+    return;
+  }
+  grid.innerHTML = projects.map(p => p.type === 'trip' ? renderTripCard(p) : renderDefaultCard(p)).join('');
+}
+
+function renderDefaultCard(p) {
+  const c = COLORS[p.color]||COLORS.indigo;
+  const tasks = p.tasks||[];
+  const done = tasks.filter(t=>t.done).length;
+  const pct  = tasks.length ? Math.round(done/tasks.length*100) : 0;
+  const nm   = nextMilestone(p);
+  const days = p.deadline ? daysUntil(p.deadline) : null;
+  const badge = days !== null ? statusBadge(days) : null;
+  const msRow = nm
+    ? `<div class="pc-milestone"><span style="font-size:13px;flex-shrink:0">📍</span><span class="pc-milestone-name">${nm.name}</span><span class="pc-milestone-date">${fmtDateShort(nm.date)}</span></div>`
+    : `<div class="pc-milestone" style="color:var(--text-3)"><span style="font-size:13px">✓</span><span style="font-size:12.5px"> No upcoming milestones</span></div>`;
+  return `
+    <div class="project-card" style="border-top-color:${c.hex}" onclick="openProject('${p.id}')">
+      <button class="btn btn-icon btn-sm pc-edit-btn" onclick="event.stopPropagation();openEditProjectModalFor('${p.id}')">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M9.5 2L11 3.5 4.5 10H3v-1.5L9.5 2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="pc-top">
+        <div class="pc-title-row"><div class="color-dot" style="background:${c.hex}"></div><div class="pc-name">${p.name}</div></div>
+        ${badge ? `<span class="badge ${badge.cls}">${badge.label}</span>` : ''}
+      </div>
+      <div class="pc-desc">${p.desc||'&nbsp;'}</div>
+      ${msRow}
+      <div class="pc-bottom"><div class="pc-progress-wrap">
+        <div class="pc-progress-bar"><div class="pc-progress-fill" style="width:${pct}%;background:${c.hex}"></div></div>
+        <div class="pc-progress-label">${done}/${tasks.length} tasks complete</div>
+      </div></div>
+    </div>`;
+}
+
+function renderTripCard(p) {
+  const c = COLORS[p.color]||COLORS.indigo;
+  const tasks = p.tasks||[];
+  const done = tasks.filter(t=>t.done).length;
+  const pct  = tasks.length ? Math.round(done/tasks.length*100) : 0;
+  const phase = getTripPhase(p);
+  const nights = tripDaysCount(p);
+
+  let countdownHtml = '';
+  if (phase === 'planning' && p.departure) {
+    const d = daysUntil(p.departure);
+    const b = statusBadge(d);
+    countdownHtml = `<span class="badge ${b.cls}">${d}d to go</span>`;
+  } else if (phase === 'live') {
+    countdownHtml = phaseBadge('live');
+  } else if (phase === 'done') {
+    countdownHtml = phaseBadge('done');
+  }
+
+  const datesHtml = p.departure
+    ? `<div class="pc-trip-dates">
+        <span style="font-size:13px">✈️</span>
+        <span>${fmtDateShort(p.departure)}</span>
+        <span class="arrow">→</span>
+        <span>${p.returnDate ? fmtDateShort(p.returnDate) : '?'}</span>
+        ${nights ? `<span class="pc-trip-dur">${nights} day${nights!==1?'s':''}</span>` : ''}
+      </div>`
+    : '';
+
+  return `
+    <div class="project-card" style="border-top-color:${c.hex}" onclick="openProject('${p.id}')">
+      <button class="btn btn-icon btn-sm pc-edit-btn" onclick="event.stopPropagation();openEditProjectModalFor('${p.id}')">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M9.5 2L11 3.5 4.5 10H3v-1.5L9.5 2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="pc-top">
+        <div class="pc-title-row"><div class="color-dot" style="background:${c.hex}"></div><div class="pc-name">${p.name}</div></div>
+        ${countdownHtml}
+      </div>
+      <div class="pc-desc">${p.desc||'&nbsp;'}</div>
+      ${datesHtml}
+      <div class="pc-bottom"><div class="pc-progress-wrap">
+        <div class="pc-progress-bar"><div class="pc-progress-fill" style="width:${pct}%;background:${c.hex}"></div></div>
+        <div class="pc-progress-label">${done}/${tasks.length} planning tasks</div>
+      </div></div>
+    </div>`;
+}
+
+// ══════════════════════════════════════
+// FULL VIEW
+// ══════════════════════════════════════
+function renderFullView(projects) {
+  document.getElementById('project-grid').style.display = 'none';
+  document.getElementById('project-full-list').style.display = '';
+  const list = document.getElementById('project-full-list');
+  if (!projects.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">✨</div><div class="empty-title">No projects yet</div></div>`;
+    return;
+  }
+  list.innerHTML = projects.map(p => {
+    const c = COLORS[p.color]||COLORS.indigo;
+    const tasks = p.tasks||[];
+    const done  = tasks.filter(t=>t.done).length;
+    const pct   = tasks.length ? Math.round(done/tasks.length*100) : 0;
+
+    let metaHtml = '';
+    if (p.type === 'trip') {
+      const phase = getTripPhase(p);
+      metaHtml = phaseBadge(phase);
+      if (p.departure) metaHtml += `<span class="meta-chip" style="font-size:11.5px">✈️ ${fmtDateShort(p.departure)}${p.returnDate?' → '+fmtDateShort(p.returnDate):''}</span>`;
+    } else {
+      const nm = nextMilestone(p);
+      if (nm) metaHtml = `<span class="meta-chip" style="font-size:11.5px">📍 ${nm.name} · ${fmtDateShort(nm.date)}</span>`;
+      const days = p.deadline ? daysUntil(p.deadline) : null;
+      if (days !== null) { const b = statusBadge(days); metaHtml += `<span class="badge ${b.cls}">${b.label}</span>`; }
+    }
+
+    const progressLabel = p.type === 'trip' ? `${done}/${tasks.length} planning` : `${done}/${tasks.length}`;
+
+    return `
+      <div class="project-full-tile" id="pft-${p.id}">
+        <div class="pft-header" onclick="togglePftExpand('${p.id}')">
+          <div class="pft-accent" style="background:${c.hex}"></div>
+          <div class="pft-header-inner">
+            <div class="pft-title-block">
+              <div class="pft-name">${p.name}</div>
+              <div class="pft-desc">${p.desc||''}</div>
+            </div>
+            <div class="pft-meta">${metaHtml}</div>
+            <div class="pft-progress-wrap">
+              <div class="pft-progress-bar"><div class="pft-progress-fill" style="width:${pct}%;background:${c.hex}"></div></div>
+              <span class="pft-progress-label">${progressLabel}</span>
+            </div>
+            <button class="pft-expand-btn open" id="pft-expand-${p.id}">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="pft-tasks open" id="pft-tasks-${p.id}">
+          <div id="pft-task-list-${p.id}">${renderPftTaskList(p)}</div>
+          <div class="pft-task-add">
+            <input class="pft-task-input" id="pft-input-${p.id}" placeholder="Add a planning task…"
+              onkeydown="if(event.key==='Enter')addTaskFull('${p.id}')">
+            <button class="btn btn-sm" onclick="addTaskFull('${p.id}')">Add</button>
+          </div>
+          <div class="pft-tasks-footer">
+            <span class="pft-open-link" onclick="openProject('${p.id}')">Open project →</span>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderPftTaskList(p) {
+  return (p.tasks||[]).map(t => `
+    <div class="pft-task-item">
+      <div class="pft-task-cb ${t.done?'checked':''}" onclick="toggleTaskFull('${p.id}','${t.id}',event)"></div>
+      <span class="pft-task-text ${t.done?'done':''}">${t.text}</span>
+      <button class="pft-task-del" onclick="deleteTaskFull('${p.id}','${t.id}',event)">×</button>
+    </div>`).join('');
+}
+
+function togglePftExpand(id) {
+  document.getElementById(`pft-tasks-${id}`).classList.toggle('open');
+  document.getElementById(`pft-expand-${id}`).classList.toggle('open');
+}
+function toggleTaskFull(pid, tid, e) {
+  e.stopPropagation();
+  updateData(d => {
+    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===pid);
+    const t = (p?.tasks||[]).find(x=>x.id===tid);
+    if (t) t.done = !t.done;
+  });
+  refreshPftTile(pid);
+}
+function deleteTaskFull(pid, tid, e) {
+  e.stopPropagation();
+  updateData(d => {
+    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===pid);
+    if (p) p.tasks = (p.tasks||[]).filter(t=>t.id!==tid);
+  });
+  refreshPftTile(pid);
+}
+function addTaskFull(pid) {
+  const input = document.getElementById(`pft-input-${pid}`);
+  const text = input.value.trim(); if (!text) return;
+  updateData(d => {
+    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===pid);
+    if (p) { p.tasks=p.tasks||[]; p.tasks.push({id:uid(),text,done:false}); }
+  });
+  input.value = ''; refreshPftTile(pid);
+}
+function refreshPftTile(pid) {
+  const pl = getData().planners.find(x=>x.id===activePlannerId);
+  const p  = (pl?.projects||[]).find(x=>x.id===pid);
+  if (!p) return;
+  const c = COLORS[p.color]||COLORS.indigo;
+  const tasks = p.tasks||[]; const done = tasks.filter(t=>t.done).length;
+  const pct = tasks.length ? Math.round(done/tasks.length*100) : 0;
+  const tile = document.getElementById(`pft-${pid}`); if (!tile) return;
+  tile.querySelector('.pft-progress-fill').style.width = pct+'%';
+  tile.querySelector('.pft-progress-label').textContent = p.type==='trip' ? `${done}/${tasks.length} planning` : `${done}/${tasks.length}`;
+  document.getElementById(`pft-task-list-${pid}`).innerHTML = renderPftTaskList(p);
+}
+
+// ══════════════════════════════════════
+// VIEW TOGGLE
+// ══════════════════════════════════════
+function setViewMode(mode) {
+  viewMode = mode;
+  document.getElementById('vbtn-grid').classList.toggle('active', mode==='grid');
+  document.getElementById('vbtn-full').classList.toggle('active', mode==='full');
+  showList();
+}
+
+// ══════════════════════════════════════
+// OPEN PROJECT
+// ══════════════════════════════════════
+function openProject(pid) {
+  const d = getData();
+  const pl = d.planners.find(x=>x.id===activePlannerId);
+  const p = (pl?.projects||[]).find(x=>x.id===pid);
+  if (!p) return;
+  activeProjectId = pid;
+
+  document.getElementById('view-list').style.display = 'none';
+  document.getElementById('view-detail').style.display = 'block';
+  document.getElementById('bc-sep').style.display = '';
+  document.getElementById('bc-current').style.display = '';
+  document.getElementById('bc-current').textContent = p.name;
+  document.getElementById('topbar-new-btn').style.display = 'none';
+  document.getElementById('topbar-export-md-btn').style.display = '';
+
+  const isTrip = p.type === 'trip';
+  document.getElementById('detail-tabs').style.display = isTrip ? '' : 'none';
+
+  if (isTrip && getTripPhase(p) === 'live') {
+    switchDetailTab('itinerary');
+  } else {
+    switchDetailTab('planning');
+  }
+
+  renderDetailHeader(p);
+  renderDetailPlanning(p);
+  if (isTrip) renderItinerary(p);
+}
+
+// ══════════════════════════════════════
+// DETAIL TABS
+// ══════════════════════════════════════
+function switchDetailTab(tab) {
+  currentDetailTab = tab;
+  document.querySelectorAll('.detail-tab').forEach(t => t.classList.toggle('active', t.dataset.tab===tab));
+  document.getElementById('detail-planning').style.display  = tab==='planning'  ? '' : 'none';
+  document.getElementById('detail-itinerary').style.display = tab==='itinerary' ? '' : 'none';
+}
+
+// ══════════════════════════════════════
+// DETAIL HEADER
+// ══════════════════════════════════════
+function renderDetailHeader(p) {
+  const c = COLORS[p.color]||COLORS.indigo;
+  document.getElementById('dh-card').style.borderTopColor = c.hex;
+  document.getElementById('ring-circle').style.stroke = c.hex;
+  document.getElementById('dh-title').textContent = p.name;
+  document.getElementById('dh-desc').textContent = p.desc || '';
+  updateRing(p);
+
+  const chips = [];
+  if (p.type === 'trip') {
+    const phase = getTripPhase(p);
+    chips.push(phaseBadge(phase));
+    if (p.departure) {
+      const nights = tripDaysCount(p);
+      chips.push(`<span class="meta-chip">✈️ ${fmtDate(p.departure)}${p.returnDate?' → '+fmtDate(p.returnDate):''}</span>`);
+      if (nights) chips.push(`<span class="meta-chip">${nights} day${nights!==1?'s':''}</span>`);
+    }
+  } else if (p.deadline) {
+    const dd = daysUntil(p.deadline);
+    const b = statusBadge(dd);
+    chips.push(`<span class="badge ${b.cls}">Deadline ${fmtDate(p.deadline)} · ${dd>0?dd+'d':'overdue'}</span>`);
+  }
+  document.getElementById('dh-meta').innerHTML = chips.join('');
+}
+
+// ══════════════════════════════════════
+// DETAIL PLANNING TAB
+// ══════════════════════════════════════
+function renderDetailPlanning(p) {
+  // Milestones
+  const sorted = [...(p.milestones||[])].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const nextMs = nextMilestone(p);
+  document.getElementById('d-milestones').innerHTML = sorted.length
+    ? sorted.map(m => {
+        const dd = daysUntil(m.date); const isNext = nextMs?.id===m.id; const isPast = dd<0;
+        const badge = isPast ? `<span class="badge badge-neutral">${Math.abs(dd)}d ago</span>`
+          : isNext ? `<span class="badge badge-amber">Next · ${dd}d</span>`
+          : `<span class="badge badge-neutral">${dd}d</span>`;
+        return `<div class="tl-item">
+          <div class="tl-spine"><div class="tl-dot ${isPast?'done':isNext?'next':''}"></div><div class="tl-line"></div></div>
+          <div class="tl-content">
+            <div class="tl-name ${isPast?'done':''}">${m.name}</div>
+            <div class="tl-date-row"><span class="tl-date">${fmtDate(m.date)}</span>${badge}
+              <button class="tl-del" onclick="deleteMilestone('${m.id}')">×</button></div>
+          </div></div>`;
+      }).join('')
+    : `<div style="font-size:13px;color:var(--text-3)">No milestones yet</div>`;
+
+  renderDetailTasks(p);
+  document.getElementById('d-notes').value = p.notes||'';
+
+  // Deadline / trip sidebar
+  const deadlineEl = document.getElementById('d-deadline-display');
+  if (p.type === 'trip' && p.departure) {
+    const dd = daysUntil(p.departure); const phase = getTripPhase(p);
+    deadlineEl.innerHTML = `<div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px">${fmtDate(p.departure)}</div>`
+      + (phase==='planning' ? `<span class="badge ${statusBadge(dd).cls}">${dd}d to departure</span>` : phaseBadge(phase));
+  } else if (p.deadline) {
+    const dd = daysUntil(p.deadline); const b = statusBadge(dd);
+    deadlineEl.innerHTML = `<div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px">${fmtDate(p.deadline)}</div>
+      <span class="badge ${b.cls}">${dd>0?dd+'d remaining':'Overdue by '+Math.abs(dd)+'d'}</span>`;
+  } else {
+    deadlineEl.innerHTML = `<span style="font-size:13px;color:var(--text-3)">No deadline set</span>`;
+  }
+
+  const c = COLORS[p.color]||COLORS.indigo;
+  document.getElementById('d-project-meta').innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="width:10px;height:10px;border-radius:50%;background:${c.hex};flex-shrink:0"></div>
+      <span>${p.name}</span>
+    </div>
+    ${p.type==='trip'?'<div style="font-size:12px;color:var(--text-3);margin-top:4px">✈️ Trip</div>':''}`;
+}
+
+// ══════════════════════════════════════
+// DETAIL TASKS
+// ══════════════════════════════════════
+const ITEM_STATUSES = ['option','considering','booked','rejected'];
+function statusLabel(s) {
+  return {option:'Option',considering:'Maybe',booked:'Booked',rejected:'No'}[s]||'Option';
+}
+function nextStatus(s) {
+  const i = ITEM_STATUSES.indexOf(s||'option');
+  return ITEM_STATUSES[(i+1)%ITEM_STATUSES.length];
+}
+
+function renderSubItem(tid, item) {
+  const safeText = item.text.replace(/"/g,'&quot;');
+  const safeLink = (item.link||'').replace(/"/g,'&quot;');
+  return `<div class="sub-item">
+    <span class="sub-status sub-status-${item.status||'option'}" onclick="cycleItemStatus('${tid}','${item.id}')">${statusLabel(item.status)}</span>
+    <input class="sub-item-text-input ${item.status==='rejected'?'rejected':''}" value="${safeText}"
+      onblur="saveSubItemText('${tid}','${item.id}',this.value)"
+      onkeydown="if(event.key==='Enter')this.blur()"
+      onclick="event.stopPropagation()">
+    <input class="sub-item-link-input" type="url" placeholder="Add link…" value="${safeLink}"
+      onblur="saveSubItemLink('${tid}','${item.id}',this.value)"
+      onkeydown="if(event.key==='Enter')this.blur()"
+      onclick="event.stopPropagation()">
+    ${item.link ? `<a class="sub-item-link-btn" href="${item.link}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Open link">↗</a>` : ''}
+    <button class="sub-item-del" onclick="deleteTaskItem('${tid}','${item.id}')">×</button>
+  </div>`;
+}
+
+function renderTaskDrawerContent(p, t) {
+  const linkedEvent = t.linkedEventId ? (() => {
+    const days = getTripDays(p);
+    const day = days.find(d=>d.date===t.linkedEventDate);
+    return (day?.events||[]).find(e=>e.id===t.linkedEventId)||null;
+  })() : null;
+  const items = t.items||[];
+  const milestones = [...(p.milestones||[])].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const msSelect = milestones.length ? `
+    <div style="display:flex;align-items:center;gap:8px">
+      <label style="font-size:12px;color:var(--text-2);flex-shrink:0;font-weight:500">Milestone</label>
+      <select class="td-ms-select" onchange="setTaskMilestone('${t.id}',this.value)" style="flex:1;font-size:12.5px;padding:4px 7px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);color:var(--text);font-family:inherit">
+        <option value="">None</option>
+        ${milestones.map(m=>`<option value="${m.id}" ${t.milestoneId===m.id?'selected':''}>${m.name} · ${fmtDateShort(m.date)}</option>`).join('')}
+      </select>
+    </div>` : '';
+  // Potential slot section (trip projects without a linked event)
+  const potentialSlotHtml = (() => {
+    if (p.type !== 'trip' || linkedEvent) return '';
+    const slot = t.potentialSlot;
+    const formOpen = openPotentialForms.has(t.id);
+    if (slot) {
+      const range = slot.dateFrom === slot.dateTo
+        ? fmtDateShort(slot.dateFrom)
+        : `${fmtDateShort(slot.dateFrom)} – ${fmtDateShort(slot.dateTo)}`;
+      return `<div class="td-pslot">
+        <span class="td-pslot-label">📆 ${range}${slot.note ? ' · '+slot.note : ''}</span>
+        <button class="btn btn-ghost btn-sm" onclick="clearPotentialSlot('${t.id}')">Clear</button>
+      </div>`;
+    }
+    if (formOpen) {
+      return `<div class="td-pslot-form">
+        <input type="date" id="pslot-from-${t.id}" style="font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);color:var(--text);font-family:inherit">
+        <span style="font-size:12px;color:var(--text-3)">to</span>
+        <input type="date" id="pslot-to-${t.id}" style="font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);color:var(--text);font-family:inherit">
+        <input class="td-item-input" id="pslot-note-${t.id}" placeholder="Note (optional)" style="min-width:80px">
+        <button class="btn btn-sm" onclick="savePotentialSlot('${t.id}')">Save</button>
+        <button class="btn btn-ghost btn-sm" onclick="togglePotentialForm('${t.id}')">Cancel</button>
+      </div>`;
+    }
+    return `<div style="padding-top:4px"><button class="btn btn-ghost btn-sm" onclick="togglePotentialForm('${t.id}')">📆 Set date range</button></div>`;
+  })();
+
+  const safeName = t.text.replace(/"/g,'&quot;');
+  return `<div class="task-drawer-inner">
+    <input class="td-name-input" value="${safeName}"
+      onblur="saveTaskName('${t.id}',this.value)"
+      onkeydown="if(event.key==='Enter')this.blur()">
+    ${msSelect}
+    <textarea class="td-notes" placeholder="Notes…" onblur="saveTaskNotes('${t.id}',this.value)">${t.notes||''}</textarea>
+    <div class="td-items" id="td-items-${t.id}">${items.map(item=>renderSubItem(t.id,item)).join('')}</div>
+    <div class="td-add-row">
+      <input class="td-item-input" id="td-item-input-${t.id}" placeholder="Add option or link…"
+        onkeydown="if(event.key==='Enter')addTaskItem('${t.id}')">
+      <input class="td-link-input" id="td-link-input-${t.id}" placeholder="Link (optional)" type="url">
+      <button class="btn btn-sm" onclick="addTaskItem('${t.id}')">Add</button>
+    </div>
+    ${potentialSlotHtml}
+    <div class="td-footer">
+      ${linkedEvent
+        ? `<span class="td-event-link" onclick="jumpToItinEvent('${t.linkedEventDate}','${t.linkedEventId}')">📅 ${fmtDateShort(t.linkedEventDate)} · ${linkedEvent.title}</span>
+           <button class="btn btn-ghost btn-sm" onclick="unlinkTaskFromEvent('${t.id}')">Unlink</button>`
+        : p.type==='trip'
+          ? `<button class="btn btn-ghost btn-sm" onclick="openAddToItineraryModal('${t.id}')">+ Add to itinerary</button><span></span>`
+          : '<span></span><span></span>'
+      }
+    </div>
+  </div>`;
+}
+
+function renderTaskWrap(p, t, draggable) {
+  const expanded = expandedTasks.has(t.id);
+  const itemCount = (t.items||[]).length;
+  // Drag-over/leave/drop are on the wrap; dragstart is on the handle only
+  const wrapAttrs = draggable
+    ? `ondragover="onTaskDragOver(event,'${t.id}')" ondragleave="onTaskDragLeave(event,'${t.id}')" ondrop="onTaskDrop(event,'${t.id}')" ondragend="onTaskDragEnd()"`
+    : '';
+  const handle = draggable
+    ? `<span class="task-drag-handle" draggable="true" ondragstart="onTaskDragStart(event,'${t.id}')" title="Drag to reorder">
+        <svg width="10" height="14" viewBox="0 0 10 14" fill="none"><circle cx="3" cy="2.5" r="1.2" fill="currentColor"/><circle cx="7" cy="2.5" r="1.2" fill="currentColor"/><circle cx="3" cy="7" r="1.2" fill="currentColor"/><circle cx="7" cy="7" r="1.2" fill="currentColor"/><circle cx="3" cy="11.5" r="1.2" fill="currentColor"/><circle cx="7" cy="11.5" r="1.2" fill="currentColor"/></svg>
+      </span>`
+    : '';
+  return `<div class="task-item-wrap" id="task-wrap-${t.id}" ${wrapAttrs}>
+    <div class="task-item">
+      ${handle}
+      <div class="task-cb ${t.done?'checked':''}" onclick="toggleDetailTask('${t.id}')"></div>
+      <span class="task-text ${t.done?'done':''}" style="cursor:pointer" onclick="toggleTaskExpand('${t.id}')">${t.text}</span>
+      ${itemCount ? `<span class="task-sub-count">${itemCount}</span>` : ''}
+      <div class="task-actions">
+        <button class="task-expand-btn ${expanded?'open':''}" onclick="toggleTaskExpand('${t.id}')" title="Details">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4.5 3l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="task-del" onclick="deleteDetailTask('${t.id}')" title="Delete">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2.5 4h8M5 4V2.5h3V4M5.5 4v5M7.5 4v5M3 4l.5 6.5h6L10 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="task-drawer ${expanded?'open':''}" id="task-drawer-${t.id}">
+      ${renderTaskDrawerContent(p, t)}
+    </div>
+  </div>`;
+}
+
+function renderDetailTasks(p) {
+  const allTasks = p.tasks||[];
+  const done = allTasks.filter(t=>t.done).length;
+  document.getElementById('d-task-count').textContent = `${done}/${allTasks.length}`;
+
+  // Sync toggle button state
+  document.getElementById('tvt-all')?.classList.toggle('active', taskGroupMode==='all');
+  document.getElementById('tvt-ms')?.classList.toggle('active', taskGroupMode==='milestone');
+  const hdBtn = document.getElementById('tvt-hide-done');
+  if (hdBtn) {
+    hdBtn.classList.toggle('active', hideDoneTasks);
+    hdBtn.style.background = hideDoneTasks ? 'var(--surface)' : '';
+    hdBtn.style.color = hideDoneTasks ? 'var(--text)' : '';
+  }
+
+  const tasks = hideDoneTasks ? allTasks.filter(t=>!t.done) : allTasks;
+
+  if (taskGroupMode === 'all') {
+    document.getElementById('d-tasks').innerHTML = tasks.map(t => renderTaskWrap(p, t, true)).join('');
+    return;
+  }
+
+  // ── By milestone mode ──
+  const milestones = [...(p.milestones||[])].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  // Build two maps: filtered (for rendering) and full (for counts)
+  const grouped = {}, groupedAll = {};
+  milestones.forEach(m => { grouped[m.id] = []; groupedAll[m.id] = []; });
+  grouped.__none__ = []; groupedAll.__none__ = [];
+  tasks.forEach(t => {
+    const key = t.milestoneId && grouped[t.milestoneId] ? t.milestoneId : '__none__';
+    grouped[key].push(t);
+  });
+  allTasks.forEach(t => {
+    const key = t.milestoneId && groupedAll[t.milestoneId] ? t.milestoneId : '__none__';
+    groupedAll[key].push(t);
+  });
+
+  let html = '';
+  milestones.forEach(m => {
+    const mTasks = grouped[m.id];
+    const mAllTasks = groupedAll[m.id];
+    const collapsed = collapsedMsGroups.has(m.id);
+    const mDone = mAllTasks.filter(t=>t.done).length;
+    html += `<div class="task-ms-group">
+      <div class="task-ms-header" onclick="toggleMsGroup('${m.id}')">
+        <svg class="task-ms-chevron ${collapsed?'':'open'}" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4.5 3l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="task-ms-name">📍 ${m.name}</span>
+        <span class="task-ms-date">${fmtDateShort(m.date)}</span>
+        <span class="task-ms-count">${mDone}/${mAllTasks.length}</span>
+      </div>
+      ${collapsed ? '' : `<div class="task-ms-tasks">${mTasks.length ? mTasks.map(t=>renderTaskWrap(p,t,false)).join('') : '<div style="font-size:12.5px;color:var(--text-3);padding:4px 4px 8px">No tasks linked to this milestone</div>'}</div>`}
+    </div>`;
+  });
+
+  const noneTasks = grouped.__none__;
+  const noneAllTasks = groupedAll.__none__;
+  const noneCollapsed = collapsedMsGroups.has('__none__');
+  const noneDone = noneAllTasks.filter(t=>t.done).length;
+  html += `<div class="task-ms-group task-ms-none">
+    <div class="task-ms-header" onclick="toggleMsGroup('__none__')">
+      <svg class="task-ms-chevron ${noneCollapsed?'':'open'}" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4.5 3l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="task-ms-name">Unassigned</span>
+      <span class="task-ms-count">${noneDone}/${noneAllTasks.length}</span>
+    </div>
+    ${noneCollapsed ? '' : `<div class="task-ms-tasks">${noneTasks.map(t=>renderTaskWrap(p,t,true)).join('')}</div>`}
+  </div>`;
+
+  document.getElementById('d-tasks').innerHTML = html;
+}
+
+function setTaskGroupMode(mode) {
+  taskGroupMode = mode;
+  const p = getActiveProject(); if (p) renderDetailTasks(p);
+}
+function toggleHideDone() {
+  hideDoneTasks = !hideDoneTasks;
+  const p = getActiveProject(); if (p) renderDetailTasks(p);
+}
+
+function toggleMsGroup(key) {
+  if (collapsedMsGroups.has(key)) collapsedMsGroups.delete(key);
+  else collapsedMsGroups.add(key);
+  const p = getActiveProject(); if (p) renderDetailTasks(p);
+}
+
+function setTaskMilestone(tid, msId) {
+  updateData(d => {
+    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+    const t = (p?.tasks||[]).find(x=>x.id===tid);
+    if (t) t.milestoneId = msId || null;
+  });
+  const p = getActiveProject(); if (p) renderDetailTasks(p);
+}
+
+const openPotentialForms = new Set();
+
+// ── Task drag-to-reorder ──
+let dragTaskId = null;
+function onTaskDragStart(e, tid) {
+  dragTaskId = tid;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', tid);
+  // slight delay so the element doesn't vanish visually at drag start
+  setTimeout(() => document.getElementById(`task-wrap-${tid}`)?.style.setProperty('opacity','.4'), 0);
+}
+function onTaskDragOver(e, tid) {
+  if (!dragTaskId || dragTaskId === tid) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  document.getElementById(`task-wrap-${tid}`)?.classList.add('drag-over');
+}
+function onTaskDragLeave(e, tid) {
+  document.getElementById(`task-wrap-${tid}`)?.classList.remove('drag-over');
+}
+function onTaskDrop(e, tid) {
+  e.preventDefault();
+  document.getElementById(`task-wrap-${tid}`)?.classList.remove('drag-over');
+  if (!dragTaskId || dragTaskId === tid) return;
+  const fromId = dragTaskId;
+  updateData(d => {
+    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+    if (!p) return;
+    const tasks = p.tasks||[];
+    const fromIdx = tasks.findIndex(t=>t.id===fromId);
+    const toIdx   = tasks.findIndex(t=>t.id===tid);
+    if (fromIdx<0||toIdx<0) return;
+    const [item] = tasks.splice(fromIdx, 1);
+    tasks.splice(toIdx, 0, item);
+  });
+  dragTaskId = null;
+  const p = getActiveProject(); if (p) renderDetailTasks(p);
+}
+function onTaskDragEnd() {
+  if (dragTaskId) document.getElementById(`task-wrap-${dragTaskId}`)?.style.removeProperty('opacity');
+  document.querySelectorAll('.task-item-wrap.drag-over').forEach(el=>el.classList.remove('drag-over'));
+  dragTaskId = null;
+}
+
+function toggleTaskExpand(tid) {
+  if (expandedTasks.has(tid)) expandedTasks.delete(tid); else expandedTasks.add(tid);
+  const wrap = document.getElementById(`task-wrap-${tid}`);
+  if (!wrap) return;
+  wrap.querySelector('.task-expand-btn')?.classList.toggle('open', expandedTasks.has(tid));
+  document.getElementById(`task-drawer-${tid}`)?.classList.toggle('open', expandedTasks.has(tid));
+}
+
+function saveTaskNotes(tid, val) {
+  updateData(d => {
+    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+    const t = (p?.tasks||[]).find(x=>x.id===tid); if (t) t.notes = val;
+  });
+}
+
+function addTaskItem(tid) {
+  const textInput = document.getElementById(`td-item-input-${tid}`);
+  const linkInput = document.getElementById(`td-link-input-${tid}`);
+  const text = textInput?.value.trim(); if (!text) { textInput?.focus(); return; }
+  const link = linkInput?.value.trim() || null;
+  updateData(d => {
+    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+    const t = (p?.tasks||[]).find(x=>x.id===tid);
+    if (t) { t.items=t.items||[]; t.items.push({id:uid(),text,status:'option',link}); }
+  });
+  if (textInput) textInput.value = '';
+  if (linkInput) linkInput.value = '';
+  const p = getActiveProject(); if (p) renderDetailTasks(p);
+}
+
+function cycleItemStatus(tid, iid) {
+  updateData(d => {
+    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+    const t = (p?.tasks||[]).find(x=>x.id===tid);
+    const item = (t?.items||[]).find(x=>x.id===iid);
+    if (item) item.status = nextStatus(item.status);
+  });
+  const p = getActiveProject(); if (p) renderDetailTasks(p);
+}
+
+function deleteTaskItem(tid, iid) {
+  updateData(d => {
+    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+    const t = (p?.tasks||[]).find(x=>x.id===tid);
+    if (t) t.items = (t.items||[]).filter(x=>x.id!==iid);
+  });
+  const p = getActiveProject(); if (p) renderDetailTasks(p);
+}
+
+function saveTaskName(tid, text) {
+  const trimmed = text.trim(); if (!trimmed) return;
+  updateData(d => {
+    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+    const t = (p?.tasks||[]).find(x=>x.id===tid);
+    if (t) t.text = trimmed;
+  });
+  // Patch the row text without a full re-render
+  const el = document.querySelector(`#task-wrap-${tid} .task-text`);
+  if (el) el.textContent = trimmed;
+}
+
+function saveSubItemText(tid, iid, text) {
+  const trimmed = text.trim(); if (!trimmed) return;
+  updateData(d => {
+    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+    const t = (p?.tasks||[]).find(x=>x.id===tid);
+    const item = (t?.items||[]).find(x=>x.id===iid);
+    if (item) item.text = trimmed;
+  });
+}
+
+function saveSubItemLink(tid, iid, url) {
+  updateData(d => {
+    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+    const t = (p?.tasks||[]).find(x=>x.id===tid);
+    const item = (t?.items||[]).find(x=>x.id===iid);
+    if (item) item.link = url.trim() || null;
+  });
+}
+
+// ── Potential slot ──
+function getPotentialSlotsForDay(p, dateStr) {
+  return (p.tasks||[]).filter(t => {
+    if (!t.potentialSlot || t.linkedEventId) return false;
+    const {dateFrom, dateTo} = t.potentialSlot;
+    return dateFrom <= dateStr && dateStr <= dateTo;
+  });
+}
+
+function togglePotentialForm(tid) {
+  if (openPotentialForms.has(tid)) openPotentialForms.delete(tid);
+  else openPotentialForms.add(tid);
+  const p = getActiveProject(); if (!p) return;
+  const task = (p.tasks||[]).find(t=>t.id===tid); if (!task) return;
+  const drawer = document.getElementById(`task-drawer-${tid}`); if (!drawer) return;
+  drawer.innerHTML = renderTaskDrawerContent(p, task);
+}
+
+function savePotentialSlot(tid) {
+  const from = document.getElementById(`pslot-from-${tid}`)?.value;
+  const to   = document.getElementById(`pslot-to-${tid}`)?.value;
+  if (!from || !to) return;
+  const note = document.getElementById(`pslot-note-${tid}`)?.value.trim() || '';
+  updateData(d => {
+    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+    const t = (p?.tasks||[]).find(x=>x.id===tid);
+    if (t) t.potentialSlot = {dateFrom: from, dateTo: to > from ? to : from, note};
+  });
+  openPotentialForms.delete(tid);
+  const p = getActiveProject();
+  if (p) { renderDetailTasks(p); if (currentDetailTab==='itinerary') renderItinerary(p); }
+}
+
+function clearPotentialSlot(tid) {
+  updateData(d => {
+    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+    const t = (p?.tasks||[]).find(x=>x.id===tid);
+    if (t) t.potentialSlot = null;
+  });
+  openPotentialForms.delete(tid);
+  const p = getActiveProject();
+  if (p) { renderDetailTasks(p); if (currentDetailTab==='itinerary') renderItinerary(p); }
+}
+
+function unlinkTaskFromEvent(tid) {
+  updateData(d => {
+    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+    const t = (p?.tasks||[]).find(x=>x.id===tid); if (!t) return;
+    if (t.linkedEventId && t.linkedEventDate) {
+      const day = (p.days||[]).find(x=>x.date===t.linkedEventDate);
+      const ev = (day?.events||[]).find(x=>x.id===t.linkedEventId);
+      if (ev) ev.linkedTaskId = null;
+    }
+    t.linkedEventId = null; t.linkedEventDate = null;
+  });
+  const p = getActiveProject(); if (p) renderDetailTasks(p);
+}
+
+function openAddToItineraryModal(tid) {
+  const p = getActiveProject(); if (!p || p.type !== 'trip') return;
+  const task = (p.tasks||[]).find(t=>t.id===tid); if (!task) return;
+  addingFromTaskId = tid; addEventDay = null; editingEventId = null;
+  document.getElementById('modal-event-title').textContent = 'Add to itinerary';
+  document.getElementById('ev-title').value = task.text;
+  document.getElementById('ev-time').value = '';
+  document.getElementById('ev-endtime').value = '';
+  document.getElementById('ev-endtime-field').style.display = 'none';
+  document.getElementById('ev-details').value = '';
+  modalLinks = []; renderModalLinks();
+  document.getElementById('ev-delete-btn').style.display = 'none';
+  document.getElementById('ev-linked-task-row').style.display = 'none';
+  // Build day selector from trip days
+  const dayField = document.getElementById('ev-day-field');
+  dayField.style.display = '';
+  const select = document.getElementById('ev-day-select');
+  const days = getTripDays(p);
+  select.innerHTML = days.map((d,i) =>
+    `<option value="${d.date}">Day ${i+1} — ${fmtDateFull(d.date)}</option>`
+  ).join('');
+  buildEventTypePicker('event');
+  openModal('modal-event');
+  setTimeout(()=>document.getElementById('ev-title').focus(), 50);
+}
+
+function jumpToItinEvent(date, evId) {
+  if (!date || !evId) return;
+  switchDetailTab('itinerary');
+  const p = getActiveProject(); if (p) renderItinerary(p);
+  setTimeout(() => {
+    const evEl = document.querySelector(`[data-ev-id="${evId}"]`);
+    if (evEl) {
+      const body = evEl.closest('.itin-day-body');
+      if (body && !body.classList.contains('open')) {
+        body.classList.add('open');
+        body.previousElementSibling?.querySelector('.itin-chevron')?.classList.add('open');
+      }
+      evEl.scrollIntoView({behavior:'smooth',block:'center'});
+      evEl.style.background = 'var(--accent-lite)';
+      setTimeout(()=>evEl.style.background='', 1500);
+    }
+  }, 120);
+}
+
+function jumpToTask(tid) {
+  switchDetailTab('planning');
+  expandedTasks.add(tid);
+  const p = getActiveProject(); if (p) renderDetailTasks(p);
+  setTimeout(() => {
+    document.getElementById(`task-wrap-${tid}`)?.scrollIntoView({behavior:'smooth',block:'center'});
+  }, 100);
+}
+function updateRing(p) {
+  const tasks = p.tasks||[]; const done = tasks.filter(t=>t.done).length;
+  const pct = tasks.length ? Math.round(done/tasks.length*100) : 0;
+  const circ = 2*Math.PI*27;
+  document.getElementById('ring-circle').setAttribute('stroke-dashoffset',(circ*(1-pct/100)).toFixed(1));
+  document.getElementById('ring-pct').textContent = pct+'%';
+  document.getElementById('ring-sub').textContent = `${done}/${tasks.length} tasks`;
+}
+function toggleDetailTask(tid) {
+  updateData(d => {
+    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+    const t = (p?.tasks||[]).find(x=>x.id===tid); if (t) t.done = !t.done;
+  });
+  const p = getActiveProject(); if (p) { renderDetailTasks(p); updateRing(p); }
+}
+function deleteDetailTask(tid) {
+  updateData(d => {
+    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+    if (p) p.tasks = (p.tasks||[]).filter(t=>t.id!==tid);
+  });
+  const p = getActiveProject(); if (p) { renderDetailTasks(p); updateRing(p); }
+}
+function addDetailTask() {
+  const input = document.getElementById('d-task-input');
+  const text = input.value.trim(); if (!text) return;
+  updateData(d => {
+    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+    if (p) { p.tasks=p.tasks||[]; p.tasks.push({id:uid(),text,done:false}); }
+  });
+  input.value = ''; const p = getActiveProject(); if (p) { renderDetailTasks(p); updateRing(p); }
+}
+function saveNotes() {
+  const val = document.getElementById('d-notes').value;
+  updateData(d => {
+    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+    if (p) p.notes = val;
+  });
+}
+
+// ══════════════════════════════════════
+// MILESTONES
+// ══════════════════════════════════════
+function toggleMsForm() {
+  const form = document.getElementById('ms-add-form');
+  form.classList.toggle('open');
+  if (form.classList.contains('open')) document.getElementById('ms-name-input').focus();
+}
+function addMilestone() {
+  const name = document.getElementById('ms-name-input').value.trim();
+  const date = document.getElementById('ms-date-input').value;
+  if (!name||!date) return;
+  updateData(d => {
+    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+    if (p) { p.milestones=p.milestones||[]; p.milestones.push({id:uid(),name,date}); }
+  });
+  document.getElementById('ms-name-input').value = '';
+  document.getElementById('ms-date-input').value = '';
+  document.getElementById('ms-add-form').classList.remove('open');
+  const p = getActiveProject(); if (p) renderDetailPlanning(p);
+}
+function deleteMilestone(mid) {
+  updateData(d => {
+    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+    if (p) p.milestones = (p.milestones||[]).filter(m=>m.id!==mid);
+  });
+  const p = getActiveProject(); if (p) renderDetailPlanning(p);
+}
+
+// ══════════════════════════════════════
+// ITINERARY
+// ══════════════════════════════════════
+// ══════════════════════════════════════
+// ITINERARY VIEW TOGGLE
+// ══════════════════════════════════════
+function setItinView(view) {
+  itinView = view;
+  document.getElementById('ivbtn-list').classList.toggle('active', view==='list');
+  document.getElementById('ivbtn-cal').classList.toggle('active', view==='calendar');
+  const p = getActiveProject();
+  if (p) renderItinerary(p);
+}
+
+function renderItinerary(p) {
+  const phase = getTripPhase(p);
+  const todayStr = isoDate(today());
+  const days = getTripDays(p);
+
+  // Live banner (shown in list view above the days)
+  const bannerEl = document.getElementById('live-banner');
+  const inlineBannerEl = document.getElementById('live-banner-inline');
+  if (phase === 'live') {
+    const todayDay = days.find(d => d.date === todayStr);
+    const todayEvents = [...(todayDay?.events||[])].sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
+    const bannerHtml = `
+      <div class="live-banner">
+        <div class="live-banner-head">
+          <div class="live-dot"></div>
+          <span class="live-banner-title">Today — ${fmtDateFull(todayStr)}</span>
+        </div>
+        ${todayEvents.length
+          ? `<div class="live-banner-events">${todayEvents.map(ev => `
+              <div class="live-event-row">
+                <div class="live-event-icon">${EVENT_TYPES[ev.type]?.icon||'📅'}</div>
+                <div class="live-event-time">${fmtTime(ev.time)}</div>
+                <div class="live-event-title">${ev.title}</div>
+                ${(() => { const lks=getEventLinks(ev); return lks.length ? `<a class="live-event-link" href="${lks[0].url}" target="_blank" rel="noopener">${lks[0].label||'↗ Open'}${lks.length>1?' +'+( lks.length-1):''}</a>` : ''; })()}
+              </div>`).join('')}</div>`
+          : `<div style="font-size:13px;color:var(--accent-text);opacity:.7">No events scheduled for today</div>`
+        }
+      </div>`;
+    // Show banner in list view only; in calendar, phase badge in toolbar is enough
+    bannerEl.innerHTML = itinView === 'list' ? bannerHtml : '';
+    inlineBannerEl.innerHTML = itinView === 'calendar'
+      ? `<span class="badge badge-green" style="gap:6px"><span class="live-dot" style="position:static;width:7px;height:7px;flex-shrink:0"></span>Live · Today is ${fmtDateFull(todayStr)}</span>`
+      : '';
+  } else {
+    bannerEl.innerHTML = '';
+    inlineBannerEl.innerHTML = '';
+  }
+
+  const daysEl = document.getElementById('itinerary-days');
+  if (!days.length) {
+    daysEl.innerHTML = `<div class="empty"><div class="empty-icon">📅</div><div class="empty-title">No dates set</div><div class="empty-sub">Edit the project to add departure and return dates</div></div>`;
+    return;
+  }
+
+  if (itinView === 'calendar') {
+    renderCalendarView(p, days, todayStr, phase);
+    return;
+  }
+
+  // ── List view ──
+  daysEl.innerHTML = days.map((day, i) => {
+    const isToday = day.date === todayStr;
+    const isPast  = dateOnly(day.date) < today();
+    const events  = [...(day.events||[])].sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
+    const evCount = events.length;
+    const potentialTasks = getPotentialSlotsForDay(p, day.date);
+
+    const potentialHtml = potentialTasks.map(t =>
+      `<div class="itin-potential-row" onclick="switchDetailTab('planning')" title="Go to task: ${t.text}">
+        <span class="itin-potential-icon">📆</span>
+        <span class="itin-potential-text">${t.text}</span>
+        ${t.potentialSlot.note ? `<span class="itin-potential-note">${t.potentialSlot.note}</span>` : ''}
+      </div>`
+    ).join('');
+
+    return `
+      <div class="itin-day" id="itin-day-${day.date}">
+        <div class="itin-day-header ${isToday?'today':''}" onclick="toggleItinDay('${day.date}')">
+          <span class="itin-day-num">Day ${i+1}</span>
+          <span class="itin-day-date">${fmtDateFull(day.date)}</span>
+          ${isToday ? '<span class="itin-today-badge">TODAY</span>' : ''}
+          <span class="itin-event-count">${evCount ? evCount+' event'+(evCount!==1?'s':'') : ''}</span>
+          <svg class="itin-chevron ${(isToday||!isPast)?'open':''}" width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="itin-day-body ${(isToday||!isPast)?'open':''}" id="itin-body-${day.date}">
+          <div class="itin-events" id="itin-events-${day.date}">
+            ${events.length ? events.map(ev => renderEventRow(day.date, ev)).join('')
+              : !potentialTasks.length ? `<div class="itin-empty">No events — add one below</div>` : ''}
+          </div>
+          ${potentialHtml}
+          <div class="itin-add-row">
+            <button class="btn btn-sm" onclick="openAddEventModal('${day.date}')">
+              <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              Add event
+            </button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  if (phase === 'live') {
+    setTimeout(() => {
+      const el = document.getElementById(`itin-day-${todayStr}`);
+      if (el) el.scrollIntoView({ behavior:'smooth', block:'start' });
+    }, 100);
+  }
+}
+
+// ══════════════════════════════════════
+// CALENDAR VIEW
+// ══════════════════════════════════════
+const CAL_START  = 6;   // 06:00
+const CAL_END    = 23;  // 23:00
+const CAL_HOURS  = CAL_END - CAL_START;
+const PX_PER_HR  = 38;  // fits full day (~17h) on a standard screen
+const COL_WIDTH  = 168; // px per day column
+
+function timeToY(timeStr) {
+  if (!timeStr) return null;
+  const [h, m] = timeStr.split(':').map(Number);
+  const raw = (h - CAL_START) * PX_PER_HR + (m / 60) * PX_PER_HR;
+  return Math.max(0, Math.min(raw, CAL_HOURS * PX_PER_HR));
+}
+
+function renderCalendarView(p, days, todayStr, phase) {
+  const daysEl = document.getElementById('itinerary-days');
+  const c = COLORS[p.color] || COLORS.indigo;
+  const totalH = CAL_HOURS * PX_PER_HR;
+
+  // Day headers
+  const hdrs = days.map((day, i) => {
+    const isToday = day.date === todayStr;
+    return `<div class="itin-cal-hdr-day ${isToday?'today':''}" style="width:${COL_WIDTH}px">
+      <div class="itin-cal-hdr-daynum">Day ${i+1}</div>
+      <div class="itin-cal-hdr-daydate">${fmtDateFull(day.date)}</div>
+    </div>`;
+  }).join('');
+
+  // Time labels
+  let timeLabels = '';
+  for (let h = CAL_START; h <= CAL_END; h++) {
+    const y = (h - CAL_START) * PX_PER_HR;
+    timeLabels += `<div class="itin-cal-time-label" style="top:${y}px">${String(h).padStart(2,'0')}:00</div>`;
+  }
+
+  // Day columns
+  const dayCols = days.map(day => {
+    const isToday = day.date === todayStr;
+    const events  = day.events || [];
+    const timed   = events.filter(ev => ev.time).sort((a,b)=>a.time.localeCompare(b.time));
+    const untimed = events.filter(ev => !ev.time);
+
+    // Hour & half-hour grid lines
+    let lines = '';
+    for (let h = CAL_START; h <= CAL_END; h++) {
+      const y = (h - CAL_START) * PX_PER_HR;
+      lines += `<div class="itin-cal-hour-line" style="top:${y}px"></div>`;
+      if (h < CAL_END) lines += `<div class="itin-cal-half-line" style="top:${y + PX_PER_HR/2}px"></div>`;
+    }
+
+    // Now indicator
+    let nowLine = '';
+    if (isToday) {
+      const n = new Date();
+      const nowY = (n.getHours() - CAL_START) * PX_PER_HR + (n.getMinutes() / 60) * PX_PER_HR;
+      if (nowY >= 0 && nowY <= totalH) {
+        nowLine = `<div class="itin-cal-now-line" style="top:${nowY.toFixed(1)}px"><div class="itin-cal-now-dot"></div></div>`;
+      }
+    }
+
+    // Timed events — handle overlap by nudging columns
+    // Build overlap groups
+    const placed = timed.map(ev => {
+      const y = timeToY(ev.time);
+      const endY = ev.endTime ? timeToY(ev.endTime) : null;
+      const h = endY !== null && endY > y ? endY - y : Math.max(48, 28);
+      return { ev, y, h, endY: y + h };
+    });
+    // Simple overlap: track rightmost end per left-offset slot
+    const slots = [];
+    const evBlocks = placed.map(({ ev, y, h, endY }) => {
+      let slot = 0;
+      while (slots[slot] !== undefined && slots[slot] > y + 4) slot++;
+      slots[slot] = endY;
+      const et = EVENT_TYPES[ev.type] || EVENT_TYPES.note;
+      const timeLabel = ev.endTime ? `${fmtTime(ev.time)} – ${fmtTime(ev.endTime)}` : fmtTime(ev.time);
+      return `<div class="itin-cal-event-block"
+        style="top:${y.toFixed(1)}px;height:${h.toFixed(1)}px;left:${4 + slot*4}px;right:4px;background:${c.hex};color:#fff"
+        onclick="event.stopPropagation();openEditEventModal('${day.date}','${ev.id}')"
+        title="${ev.title}">
+        <div class="itin-cal-event-time">${et.icon} ${timeLabel}${getEventLinks(ev).length?` 🔗`+getEventLinks(ev).length:''}</div>
+        <div class="itin-cal-event-title">${ev.title}</div>
+      </div>`;
+    }).join('');
+
+    // Untimed events strip above grid
+    const untimedHtml = untimed.length
+      ? `<div class="itin-cal-untimed">${untimed.map(ev => {
+          const et = EVENT_TYPES[ev.type] || EVENT_TYPES.note;
+          return `<div class="itin-cal-untimed-ev"
+            style="background:${c.hex}22;border-left:3px solid ${c.hex}"
+            onclick="event.stopPropagation();openEditEventModal('${day.date}','${ev.id}')"
+            title="${ev.title}">${et.icon} ${ev.title}</div>`;
+        }).join('')}</div>`
+      : `<div class="itin-cal-untimed"></div>`;
+
+    return `<div class="itin-cal-day-col ${isToday?'today':''}" style="width:${COL_WIDTH}px"
+      onclick="openAddEventModal('${day.date}')">
+      ${untimedHtml}
+      <div class="itin-cal-day-inner" style="height:${totalH}px">
+        ${lines}${nowLine}${evBlocks}
+      </div>
+    </div>`;
+  }).join('');
+
+  daysEl.innerHTML = `
+    <div class="itin-cal-wrap">
+      <div class="itin-cal-hdr-outer">
+        <div class="itin-cal-hdr-gutter"><span>UTC</span></div>
+        <div class="itin-cal-hdr-scroll" id="itin-hdr-scroll">
+          <div class="itin-cal-hdr-inner">${hdrs}</div>
+        </div>
+      </div>
+      <div class="itin-cal-body-outer" id="itin-cal-body">
+        <div class="itin-cal-time-col">
+          <div class="itin-cal-time-inner" style="height:${totalH}px">${timeLabels}</div>
+        </div>
+        <div class="itin-cal-days-area">${dayCols}</div>
+      </div>
+    </div>`;
+
+  // Sync horizontal scroll header ↔ body
+  const calBody = document.getElementById('itin-cal-body');
+  const hdrScroll = document.getElementById('itin-hdr-scroll');
+  if (calBody && hdrScroll) {
+    calBody.addEventListener('scroll', () => { hdrScroll.scrollLeft = calBody.scrollLeft; });
+  }
+
+  // Scroll to today column horizontally
+  if (calBody) {
+    setTimeout(() => {
+      const todayIdx = days.findIndex(d => d.date === todayStr);
+      if (todayIdx >= 0) calBody.scrollLeft = Math.max(0, todayIdx * COL_WIDTH - COL_WIDTH / 2);
+    }, 50);
+  }
+}
+
+function renderEventRow(dayDate, ev) {
+  const et = EVENT_TYPES[ev.type]||EVENT_TYPES.note;
+  const p = getActiveProject();
+  const linkedTask = ev.linkedTaskId ? (p?.tasks||[]).find(t=>t.id===ev.linkedTaskId) : null;
+  const isPlaceholder = linkedTask && !linkedTask.done;
+  return `
+    <div class="itin-event ${isPlaceholder?'placeholder':''}" data-ev-id="${ev.id}" onclick="openEditEventModal('${dayDate}','${ev.id}')">
+      <div class="itin-event-icon-col">${et.icon}</div>
+      <div class="itin-event-body">
+        <div class="itin-event-header">
+          ${ev.time ? `<span class="itin-event-time">${fmtTime(ev.time)}${ev.endTime ? ' – '+fmtTime(ev.endTime) : ''}</span>` : ''}
+          <span class="itin-event-title">${ev.title}</span>
+        </div>
+        ${ev.details ? `<div class="itin-event-details">${ev.details}</div>` : ''}
+        ${(() => { const lks=getEventLinks(ev); return lks.length ? `<div class="itin-event-links">${lks.map(l=>`<a class="itin-event-link-chip" href="${l.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 ${l.label||'Link'}</a>`).join('')}</div>` : ''; })()}
+      </div>
+      <div class="itin-event-actions" onclick="event.stopPropagation()">
+        ${linkedTask ? `<button class="itin-event-task-badge" onclick="jumpToTask('${linkedTask.id}')">↖ Task</button>` : ''}
+        <button class="btn btn-icon btn-sm" onclick="openEditEventModal('${dayDate}','${ev.id}')" title="Edit">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M9.5 2L11 3.5 4.5 10H3v-1.5L9.5 2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>`;
+}
+
+function toggleItinDay(dateStr) {
+  const body = document.getElementById(`itin-body-${dateStr}`);
+  const header = body.previousElementSibling;
+  body.classList.toggle('open');
+  header.querySelector('.itin-chevron').classList.toggle('open');
+}
+
+function refreshItinDay(dateStr) {
+  const p = getActiveProject(); if (!p) return;
+  // Calendar view: full re-render (cheap enough for a trip)
+  if (itinView === 'calendar') { renderItinerary(p); return; }
+  // List view: patch just the affected day
+  const days = getTripDays(p);
+  const day = days.find(d => d.date === dateStr); if (!day) return;
+  const events = [...(day.events||[])].sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
+  const potentialTasks = getPotentialSlotsForDay(p, dateStr);
+  const eventsEl = document.getElementById(`itin-events-${dateStr}`);
+  if (eventsEl) {
+    eventsEl.innerHTML = events.length ? events.map(ev => renderEventRow(dateStr, ev)).join('')
+      : !potentialTasks.length ? `<div class="itin-empty">No events — add one below</div>` : '';
+  }
+  const dayEl = document.getElementById(`itin-day-${dateStr}`);
+  if (dayEl) {
+    const countEl = dayEl.querySelector('.itin-event-count');
+    if (countEl) countEl.textContent = events.length ? events.length+' event'+(events.length!==1?'s':'') : '';
+  }
+  if (dateStr === isoDate(today())) renderItinerary(p);
+}
+
+// ══════════════════════════════════════
+// EVENT CRUD
+// ══════════════════════════════════════
+// ── Event multi-link helpers ──
+function getEventLinks(ev) {
+  // Normalise: supports new ev.links[] and legacy ev.link string
+  if (ev.links && ev.links.length) return ev.links;
+  if (ev.link) return [{id:'legacy', label:'', url:ev.link}];
+  return [];
+}
+function renderModalLinks() {
+  document.getElementById('ev-links-list').innerHTML = modalLinks.map((l,i) => `
+    <div class="ev-link-row">
+      <input class="ev-link-label" placeholder="Label (e.g. Ticket)" value="${l.label||''}"
+        oninput="modalLinks[${i}].label=this.value">
+      <input class="ev-link-url" type="url" placeholder="https://…" value="${l.url||''}"
+        oninput="modalLinks[${i}].url=this.value">
+      <button class="ev-link-del" onclick="removeModalLink(${i})" title="Remove">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2.5 4h8M5 4V2.5h3V4M5.5 4v5M7.5 4v5M3 4l.5 6.5h6L10 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>`).join('');
+}
+function addModalLink() {
+  modalLinks.push({id:uid(), label:'', url:''});
+  renderModalLinks();
+  // focus the new URL input
+  const rows = document.querySelectorAll('.ev-link-row');
+  rows[rows.length-1]?.querySelector('.ev-link-url')?.focus();
+}
+function removeModalLink(idx) {
+  modalLinks.splice(idx, 1);
+  renderModalLinks();
+}
+
+function onEvTimeChange() {
+  const hasTime = !!document.getElementById('ev-time').value;
+  document.getElementById('ev-endtime-field').style.display = hasTime ? '' : 'none';
+  if (!hasTime) document.getElementById('ev-endtime').value = '';
+}
+
+function buildEventTypePicker(current) {
+  selectedEvType = current || 'flight';
+  document.getElementById('event-type-grid').innerHTML = EVENT_TYPE_KEYS.map(k => `
+    <div class="ev-type-opt ${k===selectedEvType?'selected':''}" onclick="selectEvType('${k}',this)">
+      <span>${EVENT_TYPES[k].icon}</span>
+      <span>${EVENT_TYPES[k].label}</span>
+    </div>`).join('');
+}
+function selectEvType(key, el) {
+  el.closest('.event-type-grid').querySelectorAll('.ev-type-opt').forEach(x=>x.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedEvType = key;
+}
+
+function openAddEventModal(dayDate) {
+  addEventDay = dayDate; editingEventId = null; addingFromTaskId = null;
+  document.getElementById('modal-event-title').textContent = 'Add event';
+  document.getElementById('ev-title').value = '';
+  document.getElementById('ev-time').value = '';
+  document.getElementById('ev-endtime').value = '';
+  document.getElementById('ev-endtime-field').style.display = 'none';
+  document.getElementById('ev-details').value = '';
+  modalLinks = []; renderModalLinks();
+  document.getElementById('ev-delete-btn').style.display = 'none';
+  document.getElementById('ev-day-field').style.display = 'none';
+  document.getElementById('ev-linked-task-row').style.display = 'none';
+  buildEventTypePicker('flight');
+  openModal('modal-event');
+  setTimeout(() => document.getElementById('ev-title').focus(), 50);
+}
+
+function openEditEventModal(dayDate, evId) {
+  const p = getActiveProject(); if (!p) return;
+  const days = getTripDays(p);
+  const day = days.find(d => d.date === dayDate); if (!day) return;
+  const ev = (day.events||[]).find(x=>x.id===evId); if (!ev) return;
+
+  addEventDay = dayDate; editingEventId = evId; addingFromTaskId = null;
+  document.getElementById('modal-event-title').textContent = 'Edit event';
+  document.getElementById('ev-title').value = ev.title||'';
+  document.getElementById('ev-time').value = ev.time||'';
+  document.getElementById('ev-endtime').value = ev.endTime||'';
+  document.getElementById('ev-endtime-field').style.display = ev.time ? '' : 'none';
+  document.getElementById('ev-details').value = ev.details||'';
+  modalLinks = getEventLinks(ev).map(l => ({...l})); renderModalLinks();
+  document.getElementById('ev-delete-btn').style.display = '';
+  document.getElementById('ev-day-field').style.display = 'none';
+  // Show linked task if any
+  const linkedTaskRow = document.getElementById('ev-linked-task-row');
+  if (ev.linkedTaskId) {
+    const task = (p.tasks||[]).find(t=>t.id===ev.linkedTaskId);
+    if (task) {
+      linkedTaskRow.style.display = 'flex';
+      document.getElementById('ev-linked-task-text').textContent = task.text;
+    } else linkedTaskRow.style.display = 'none';
+  } else linkedTaskRow.style.display = 'none';
+  buildEventTypePicker(ev.type||'note');
+  openModal('modal-event');
+}
+
+function saveEvent() {
+  const title = document.getElementById('ev-title').value.trim();
+  if (!title) { document.getElementById('ev-title').focus(); return; }
+  // Determine day
+  const dayDate = addEventDay || document.getElementById('ev-day-select').value;
+  if (!dayDate) { document.getElementById('ev-day-select')?.focus(); return; }
+  // Preserve or set linkedTaskId
+  let linkedTaskId = addingFromTaskId || null;
+  if (editingEventId && !linkedTaskId) {
+    const p0 = getActiveProject();
+    const days0 = getTripDays(p0);
+    const existingEv = (days0.find(d=>d.date===addEventDay)?.events||[]).find(x=>x.id===editingEventId);
+    linkedTaskId = existingEv?.linkedTaskId || null;
+  }
+  const startTime = document.getElementById('ev-time').value || null;
+  const endTime = startTime ? (document.getElementById('ev-endtime').value || null) : null;
+  const links = modalLinks.map(l=>({id:l.id||uid(),label:l.label.trim(),url:l.url.trim()})).filter(l=>l.url);
+  const ev = {
+    id: editingEventId || uid(),
+    type: selectedEvType,
+    title,
+    time: startTime,
+    endTime,
+    details: document.getElementById('ev-details').value.trim() || null,
+    links: links.length ? links : undefined,
+    ...(linkedTaskId ? {linkedTaskId} : {}),
+  };
+  updateData(d => {
+    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+    if (!p) return;
+    p.days = p.days||[];
+    let day = p.days.find(x=>x.date===dayDate);
+    if (!day) { day = {date:dayDate,events:[]}; p.days.push(day); }
+    day.events = day.events||[];
+    if (editingEventId) {
+      const idx = day.events.findIndex(x=>x.id===editingEventId);
+      if (idx>=0) day.events[idx] = ev; else day.events.push(ev);
+    } else {
+      day.events.push(ev);
+    }
+    // Link task back to this event
+    if (addingFromTaskId) {
+      const task = (p.tasks||[]).find(t=>t.id===addingFromTaskId);
+      if (task) { task.linkedEventId = ev.id; task.linkedEventDate = dayDate; }
+    }
+  });
+  closeModal('modal-event');
+  const fromTask = addingFromTaskId;
+  addingFromTaskId = null;
+  refreshItinDay(dayDate);
+  if (fromTask) { const p2=getActiveProject(); if(p2) renderDetailTasks(p2); }
+}
+
+function deleteCurrentEvent() {
+  if (!editingEventId || !addEventDay) return;
+  updateData(d => {
+    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+    if (!p) return;
+    const day = (p.days||[]).find(x=>x.date===addEventDay);
+    if (day) {
+      const ev = (day.events||[]).find(x=>x.id===editingEventId);
+      if (ev?.linkedTaskId) {
+        const task = (p.tasks||[]).find(t=>t.id===ev.linkedTaskId);
+        if (task) { task.linkedEventId=null; task.linkedEventDate=null; }
+      }
+      day.events = (day.events||[]).filter(x=>x.id!==editingEventId);
+    }
+  });
+  closeModal('modal-event');
+  refreshItinDay(addEventDay);
+  const p2=getActiveProject(); if(p2) renderDetailTasks(p2);
+}
+
+function unlinkEventFromTask() {
+  if (!editingEventId || !addEventDay) return;
+  updateData(d => {
+    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+    if (!p) return;
+    const day = (p.days||[]).find(x=>x.date===addEventDay);
+    const ev = (day?.events||[]).find(x=>x.id===editingEventId);
+    if (ev?.linkedTaskId) {
+      const task = (p.tasks||[]).find(t=>t.id===ev.linkedTaskId);
+      if (task) { task.linkedEventId=null; task.linkedEventDate=null; }
+      ev.linkedTaskId = null;
+    }
+  });
+  document.getElementById('ev-linked-task-row').style.display = 'none';
+  const p2=getActiveProject(); if(p2) renderDetailTasks(p2);
+}
+
+// ══════════════════════════════════════
+// PLANNERS CRUD
+// ══════════════════════════════════════
+function buildIconPicker(containerId, current) {
+  selectedIcon = current || PLANNER_ICONS[0];
+  document.getElementById(containerId).innerHTML = PLANNER_ICONS.map(ic => `
+    <div class="icon-opt ${ic===selectedIcon?'selected':''}" onclick="selectIcon(this,'${ic}',event)">${ic}</div>`).join('');
+}
+function selectIcon(el, icon, e) {
+  e.stopPropagation();
+  el.closest('.icon-picker').querySelectorAll('.icon-opt').forEach(x=>x.classList.remove('selected'));
+  el.classList.add('selected'); selectedIcon = icon;
+}
+function createPlanner() {
+  const name = document.getElementById('np-name').value.trim();
+  if (!name) { document.getElementById('np-name').focus(); return; }
+  let newId;
+  updateData(d => { newId=uid(); d.planners.push({id:newId,name,icon:selectedIcon,projects:[]}); });
+  closeModal('modal-new-planner');
+  document.getElementById('np-name').value = '';
+  activePlannerId = newId; renderSidebar(); showList();
+}
+function deletePlanner(e, id) {
+  e.stopPropagation();
+  const pl = getData().planners.find(x=>x.id===id);
+  if (!confirm(`Delete planner "${pl?.name}" and all its projects?`)) return;
+  updateData(d => { d.planners = d.planners.filter(x=>x.id!==id); });
+  if (activePlannerId===id) activePlannerId = getData().planners[0]?.id||null;
+  renderSidebar(); showList();
+}
+function openEditPlannerModal(id) {
+  const pl = getData().planners.find(x=>x.id===id); if (!pl) return;
+  editingPlannerId = id;
+  document.getElementById('ep-name').value = pl.name;
+  buildIconPicker('ep-icon-picker', pl.icon||PLANNER_ICONS[0]);
+  openModal('modal-edit-planner');
+  setTimeout(()=>document.getElementById('ep-name').focus(), 50);
+}
+function savePlannerEdits() {
+  const name = document.getElementById('ep-name').value.trim();
+  if (!name) { document.getElementById('ep-name').focus(); return; }
+  updateData(d => {
+    const pl = d.planners.find(x=>x.id===editingPlannerId);
+    if (pl) { pl.name=name; pl.icon=selectedIcon; }
+  });
+  closeModal('modal-edit-planner');
+  renderSidebar();
+  if (activePlannerId===editingPlannerId) showList();
+}
+function deletePlannerFromModal() {
+  const pl = getData().planners.find(x=>x.id===editingPlannerId);
+  if (!confirm(`Delete planner "${pl?.name}" and all its projects?`)) return;
+  updateData(d => { d.planners=d.planners.filter(x=>x.id!==editingPlannerId); });
+  if (activePlannerId===editingPlannerId) activePlannerId=getData().planners[0]?.id||null;
+  closeModal('modal-edit-planner');
+  renderSidebar(); showList();
+}
+
+// ══════════════════════════════════════
+// PROJECTS CRUD
+// ══════════════════════════════════════
+function buildColorPicker(containerId, current) {
+  selectedColor = current||'indigo';
+  document.getElementById(containerId).innerHTML = COLOR_KEYS.map(k => `
+    <div class="color-swatch ${k===selectedColor?'selected':''}" style="background:${COLORS[k].hex}"
+      onclick="selectColor(this,'${k}',event)"></div>`).join('');
+}
+function selectColor(el, color, e) {
+  e.stopPropagation();
+  el.closest('.color-picker').querySelectorAll('.color-swatch').forEach(x=>x.classList.remove('selected'));
+  el.classList.add('selected'); selectedColor = color;
+}
+function setProjectType(type) {
+  // Copy deadline → departure when switching to trip (if departure not already set)
+  if (type === 'trip' && selectedProjType !== 'trip') {
+    const deadline = document.getElementById('proj-deadline').value;
+    if (deadline && !document.getElementById('proj-departure').value) {
+      document.getElementById('proj-departure').value = deadline;
+    }
+  }
+  selectedProjType = type;
+  document.getElementById('type-opt-default').classList.toggle('active', type==='default');
+  document.getElementById('type-opt-trip').classList.toggle('active', type==='trip');
+  document.getElementById('proj-default-fields').style.display = type==='default' ? '' : 'none';
+  document.getElementById('proj-trip-fields').style.display   = type==='trip'    ? '' : 'none';
+}
+function onDepartureDateChange() {
+  const dep = document.getElementById('proj-departure').value;
+  const ret = document.getElementById('proj-return');
+  if (dep && ret.value && ret.value < dep) ret.value = dep;
+  if (dep) ret.min = dep;
+}
+function onReturnDateChange() {
+  const dep = document.getElementById('proj-departure').value;
+  const ret = document.getElementById('proj-return');
+  if (dep && ret.value && ret.value < dep) ret.value = dep;
+}
+function openNewProjectModal() {
+  if (!activePlannerId) { alert('Select or create a planner first.'); return; }
+  editingProjectId = null;
+  document.getElementById('modal-project-title').textContent = 'New project';
+  document.getElementById('proj-name').value = '';
+  document.getElementById('proj-desc').value = '';
+  document.getElementById('proj-deadline').value = '';
+  document.getElementById('proj-departure').value = '';
+  document.getElementById('proj-return').value = '';
+  document.getElementById('proj-delete-btn').style.display = 'none';
+  setProjectType('default');
+  buildColorPicker('proj-color-picker','indigo');
+  openModal('modal-project');
+  setTimeout(()=>document.getElementById('proj-name').focus(),50);
+}
+function openEditProjectModalFor(pid) {
+  const pl = getData().planners.find(x=>x.id===activePlannerId);
+  const p = (pl?.projects||[]).find(x=>x.id===pid); if (!p) return;
+  editingProjectId = pid;
+  document.getElementById('modal-project-title').textContent = 'Edit project';
+  document.getElementById('proj-name').value = p.name;
+  document.getElementById('proj-desc').value = p.desc||'';
+  document.getElementById('proj-deadline').value = p.deadline||'';
+  document.getElementById('proj-departure').value = p.departure||'';
+  document.getElementById('proj-return').value = p.returnDate||'';
+  document.getElementById('proj-delete-btn').style.display = '';
+  setProjectType(p.type||'default');
+  buildColorPicker('proj-color-picker', p.color);
+  openModal('modal-project');
+}
+function saveProject() {
+  const name = document.getElementById('proj-name').value.trim();
+  if (!name) { document.getElementById('proj-name').focus(); return; }
+  const desc      = document.getElementById('proj-desc').value.trim();
+  const isTrip    = selectedProjType === 'trip';
+  const deadline  = isTrip ? null : (document.getElementById('proj-deadline').value||null);
+  const departure = isTrip ? (document.getElementById('proj-departure').value||null) : null;
+  const returnDate= isTrip ? (document.getElementById('proj-return').value||null) : null;
+
+  if (editingProjectId) {
+    updateData(d => {
+      const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===editingProjectId);
+      if (p) Object.assign(p, {name,desc,color:selectedColor,type:selectedProjType,deadline,departure,returnDate});
+    });
+    closeModal('modal-project');
+    renderSidebar();
+    if (activeProjectId === editingProjectId) {
+      // Full re-open so tabs, phase, itinerary all refresh correctly
+      openProject(editingProjectId);
+    } else {
+      showList();
+    }
+  } else {
+    let newId;
+    updateData(d => {
+      const pl = d.planners.find(x=>x.id===activePlannerId); if (!pl) return;
+      newId = uid();
+      pl.projects = pl.projects||[];
+      pl.projects.push({id:newId,type:selectedProjType,color:selectedColor,name,desc,deadline,departure,returnDate,notes:'',milestones:[],tasks:[],days:[]});
+    });
+    closeModal('modal-project'); renderSidebar(); showList();
+  }
+}
+function deleteCurrentProject() {
+  const pl = getData().planners.find(x=>x.id===activePlannerId);
+  const p = (pl?.projects||[]).find(x=>x.id===editingProjectId);
+  if (!confirm(`Delete "${p?.name}"?`)) return;
+  updateData(d => {
+    const pl = d.planners.find(x=>x.id===activePlannerId);
+    if (pl) pl.projects = (pl.projects||[]).filter(x=>x.id!==editingProjectId);
+  });
+  closeModal('modal-project');
+  if (activeProjectId===editingProjectId) activeProjectId = null;
+  renderSidebar(); showList();
+}
+
+// ══════════════════════════════════════
+// EXPORT / IMPORT
+// ══════════════════════════════════════
+function exportProjectMarkdown() {
+  const p = getActiveProject(); if (!p) return;
+  const lines = [];
+
+  // ── Header ──
+  lines.push(`# ${p.name}`);
+  if (p.desc) lines.push(`\n> ${p.desc}`);
+  lines.push('');
+
+  // ── Meta ──
+  if (p.type === 'trip') {
+    const phase = getTripPhase(p);
+    const phaseLabel = {planning:'Planning',live:'Live — in progress',done:'Completed'}[phase] || '';
+    lines.push(`**Type:** Trip`);
+    if (phaseLabel) lines.push(`**Status:** ${phaseLabel}`);
+    if (p.departure) lines.push(`**Dates:** ${fmtDate(p.departure)}${p.returnDate ? ' → ' + fmtDate(p.returnDate) : ''}`);
+    const nights = tripDaysCount(p);
+    if (nights) lines.push(`**Duration:** ${nights} day${nights!==1?'s':''}`);
+  } else {
+    lines.push(`**Type:** Project`);
+    if (p.deadline) {
+      const dd = daysUntil(p.deadline);
+      lines.push(`**Deadline:** ${fmtDate(p.deadline)}${dd >= 0 ? ` *(${dd}d remaining)*` : ` *(overdue by ${Math.abs(dd)}d)*`}`);
+    }
+  }
+  const tasks = p.tasks||[];
+  const doneTasks = tasks.filter(t=>t.done).length;
+  const pct = tasks.length ? Math.round(doneTasks/tasks.length*100) : 0;
+  lines.push(`**Progress:** ${doneTasks}/${tasks.length} tasks complete (${pct}%)`);
+  lines.push('');
+  lines.push('---');
+  lines.push('');
+
+  // ── Milestones ──
+  const milestones = [...(p.milestones||[])].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  if (milestones.length) {
+    lines.push('## Milestones');
+    lines.push('');
+    milestones.forEach(m => {
+      const dd = daysUntil(m.date);
+      const isPast = dd < 0;
+      const tag = isPast ? ` *(${Math.abs(dd)}d ago)*` : dd === 0 ? ' *(today)*' : ` *(in ${dd}d)*`;
+      lines.push(`- [${isPast?'x':' '}] **${m.name}** — ${fmtDate(m.date)}${tag}`);
+    });
+    lines.push('');
+  }
+
+  // ── Tasks ──
+  if (tasks.length) {
+    lines.push('## Tasks');
+    lines.push('');
+    // Group by milestone if any tasks have milestoneId
+    const hasMsLinks = tasks.some(t=>t.milestoneId);
+    if (hasMsLinks && milestones.length) {
+      const grouped = {};
+      milestones.forEach(m => { grouped[m.id] = []; });
+      grouped.__none__ = [];
+      tasks.forEach(t => {
+        const key = t.milestoneId && grouped[t.milestoneId] ? t.milestoneId : '__none__';
+        grouped[key].push(t);
+      });
+      milestones.forEach(m => {
+        const mTasks = grouped[m.id];
+        if (!mTasks.length) return;
+        lines.push(`### ${m.name}`);
+        lines.push('');
+        mTasks.forEach(t => mdTask(t, lines));
+      });
+      const none = grouped.__none__;
+      if (none.length) {
+        lines.push('### Unassigned');
+        lines.push('');
+        none.forEach(t => mdTask(t, lines));
+      }
+    } else {
+      tasks.forEach(t => mdTask(t, lines));
+    }
+    lines.push('');
+  }
+
+  // ── Notes ──
+  if (p.notes?.trim()) {
+    lines.push('## Notes');
+    lines.push('');
+    lines.push(p.notes.trim());
+    lines.push('');
+  }
+
+  // ── Itinerary (trips only) ──
+  if (p.type === 'trip') {
+    const days = getTripDays(p);
+    if (days.length) {
+      lines.push('## Itinerary');
+      lines.push('');
+      days.forEach((day, i) => {
+        const events = [...(day.events||[])].sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
+        lines.push(`### Day ${i+1} — ${fmtDateFull(day.date)}`);
+        lines.push('');
+        if (events.length) {
+          events.forEach(ev => {
+            const et = EVENT_TYPES[ev.type]||EVENT_TYPES.note;
+            const timeStr = ev.time
+              ? `**${fmtTime(ev.time)}${ev.endTime?' – '+fmtTime(ev.endTime):''}** · `
+              : '';
+            lines.push(`- ${et.icon} ${timeStr}${ev.title}`);
+            if (ev.details) {
+              ev.details.trim().split('\n').forEach(l => { if (l.trim()) lines.push(`  ${l.trim()}`); });
+            }
+            getEventLinks(ev).forEach(l => lines.push(`  🔗 [${l.label||'Link'}](${l.url})`));
+          });
+        } else {
+          lines.push('*No events scheduled*');
+        }
+        lines.push('');
+      });
+    }
+  }
+
+  // ── Footer ──
+  lines.push('---');
+  lines.push('');
+  lines.push(`*Exported from tudu on ${fmtDate(isoDate(new Date()))}*`);
+
+  const md = lines.join('\n');
+  const blob = new Blob([md], {type:'text/markdown'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${p.name.replace(/[^a-z0-9]+/gi,'-').toLowerCase()}-${isoDate(new Date())}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function mdTask(t, lines) {
+  lines.push(`- [${t.done?'x':' '}] ${t.text}`);
+  if (t.notes?.trim()) {
+    t.notes.trim().split('\n').forEach(l => { if (l.trim()) lines.push(`  > ${l.trim()}`); });
+  }
+  (t.items||[]).forEach(item => {
+    const icon = {option:'○',considering:'◐',booked:'●',rejected:'✗'}[item.status||'option'];
+    const linkStr = item.link ? ` — [link](${item.link})` : '';
+    lines.push(`  - ${icon} \`${statusLabel(item.status)}\` ${item.text}${linkStr}`);
+  });
+  if (t.linkedEventDate) {
+    lines.push(`  - 📅 Linked to itinerary: ${fmtDateShort(t.linkedEventDate)}`);
+  }
+}
+
+function exportData() {
+  const d = getData();
+  const blob = new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=`tudu-export-${isoDate(new Date())}.json`; a.click();
+  URL.revokeObjectURL(url);
+}
+function handleImportFile(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const resultEl = document.getElementById('import-result'); resultEl.style.display='block';
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (!imported.planners||!Array.isArray(imported.planners)) throw new Error('Invalid format');
+      updateData(d => {
+        const existing = new Set(d.planners.map(p=>p.id)); let added=0;
+        imported.planners.forEach(pl => { if (!existing.has(pl.id)) { d.planners.push(pl); added++; } });
+        resultEl.innerHTML = `<span style="color:var(--green-t)">✓ Imported ${added} new planner${added!==1?'s':''}</span>`;
+      });
+      renderSidebar();
+      if (!activePlannerId) { activePlannerId=getData().planners[0]?.id||null; showList(); }
+    } catch(err) { resultEl.innerHTML=`<span style="color:var(--red-t)">✗ ${err.message}</span>`; }
+    input.value='';
+  };
+  reader.readAsText(file);
+}
+const importDrop = document.getElementById('import-drop');
+importDrop.addEventListener('dragover',e=>{e.preventDefault();importDrop.classList.add('drag')});
+importDrop.addEventListener('dragleave',()=>importDrop.classList.remove('drag'));
+importDrop.addEventListener('drop',e=>{
+  e.preventDefault(); importDrop.classList.remove('drag');
+  const file=e.dataTransfer.files[0]; if(!file) return;
+  const dt=new DataTransfer(); dt.items.add(file);
+  const fi=document.getElementById('import-file'); fi.files=dt.files; handleImportFile(fi);
+});
+
+// ══════════════════════════════════════
+// MODAL HELPERS
+// ══════════════════════════════════════
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  if (id==='modal-import') { document.getElementById('import-result').style.display='none'; }
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-bg').forEach(bg => {
+  bg.addEventListener('click', e => {
+    if (e.target !== bg) return;
+    // Don't close on outside click if any form field in this modal has content
+    const dirty = [...bg.querySelectorAll('input, textarea, select')]
+      .some(el => el.type !== 'hidden' && el.tagName === 'SELECT' ? false : el.value.trim());
+    if (dirty) return;
+    bg.classList.remove('open');
+  });
+});
+document.addEventListener('keydown', e => {
+  if(e.key==='Escape') document.querySelectorAll('.modal-bg.open').forEach(m=>m.classList.remove('open'));
+});
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+function init() {
+  buildIconPicker('np-icon-picker', PLANNER_ICONS[0]);
+  const d = getData();
+  activePlannerId = d.planners[0]?.id||null;
+  renderSidebar(); showList();
+}
+init();
+</script>
+</body>
+</html>
