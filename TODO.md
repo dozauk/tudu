@@ -142,6 +142,19 @@ would only be needed if users want to browse ALL their Drive files — not requi
 - [ ] User-editable status labels (currently: Option / Maybe / Booked / No)
 - [ ] Drag-and-drop reordering of sub-items
 
+## Itinerary Improvements
+
+### Multi-day hotel events
+- [ ] Hotel event gets `checkInDate`, `checkOutDate` fields (replacing single-day `date`); check-in and check-out times stored separately (`checkInTime`, `checkOutTime`)
+- [ ] Event modal: when type = `hotel`, show date range picker (check-in date / check-out date) and separate time fields for each; hide the normal single-day selector
+- [ ] Data: hotel is stored once on the check-in day (or as a top-level span object) — on render it is **virtualised** into multiple itinerary appearances:
+  - **Check-in day** → timed event block "🏨 Check in · [Hotel name]" at check-in time
+  - **Intermediate days** → grey all-day banner "🏨 [Hotel name]" at the top of each day column (list view: before timed events; calendar view: full-width banner above the hour grid)
+  - **Check-out day** → timed event block "🏨 Check out · [Hotel name]" at check-out time
+- [ ] Editing: clicking any of the virtualised rows opens the same hotel edit modal
+- [ ] Calendar view: all-day banners sit in a sticky header band above the time grid, similar to how Google Calendar shows multi-day events
+- [ ] Export (Markdown + iCal): hotel appears as a single span entry with check-in/check-out dates
+
 ## General
 - [ ] Responsive mobile UI
 - [ ] Offline support / PWA
