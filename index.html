@@ -371,12 +371,13 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 
 /* ── Event links ── */
 .ev-link-row{display:flex;gap:6px;margin-bottom:6px;align-items:center}
-.ev-link-label{width:110px;flex-shrink:0;font-size:12.5px;padding:6px 9px;border:1px solid var(--border-2);border-radius:var(--r-md);background:var(--surface);color:var(--text);font-family:inherit;transition:border-color .15s}
-.ev-link-label:focus{outline:none;border-color:var(--accent)}
-.ev-link-label::placeholder{color:var(--text-3)}
-.ev-link-url{flex:1;font-size:12.5px;padding:6px 9px;border:1px solid var(--border-2);border-radius:var(--r-md);background:var(--surface);color:var(--text);font-family:inherit;transition:border-color .15s}
-.ev-link-url:focus{outline:none;border-color:var(--accent)}
-.ev-link-url::placeholder{color:var(--text-3)}
+/* Use two-class selectors to beat .form-field input{width:100%} (specificity 0,1,1) */
+.ev-link-row .ev-link-label{width:110px;flex-shrink:0;font-size:12.5px;padding:6px 9px;border:1px solid var(--border-2);border-radius:var(--r-md);background:var(--surface);color:var(--text);font-family:inherit;transition:border-color .15s}
+.ev-link-row .ev-link-label:focus{outline:none;border-color:var(--accent)}
+.ev-link-row .ev-link-label::placeholder{color:var(--text-3)}
+.ev-link-row .ev-link-url{flex:1;min-width:0;font-size:12.5px;padding:6px 9px;border:1px solid var(--border-2);border-radius:var(--r-md);background:var(--surface);color:var(--text);font-family:inherit;transition:border-color .15s}
+.ev-link-row .ev-link-url:focus{outline:none;border-color:var(--accent)}
+.ev-link-row .ev-link-url::placeholder{color:var(--text-3)}
 .ev-link-del{background:none;border:none;cursor:pointer;color:var(--text-3);padding:4px;border-radius:3px;flex-shrink:0;display:flex;align-items:center;transition:color .12s}
 .ev-link-del:hover{color:var(--red)}
 .itin-event-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}
@@ -520,6 +521,42 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .drive-settings-instructions li{margin-bottom:2px}
 .drive-settings-instructions a{color:var(--accent-text)}
 .drive-settings-instructions code{font-size:11.5px;background:var(--surface-2);padding:1px 5px;border-radius:4px;border:1px solid var(--border)}
+
+/* ── Project Files ── */
+.files-empty{font-size:13px;color:var(--text-3);padding:4px 0}
+.file-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.file-item:last-child{border-bottom:none}
+.file-type-icon{font-size:18px;flex-shrink:0;line-height:1;padding-top:2px}
+.file-item-info{flex:1;min-width:0}
+.file-item-name{font-size:13px;font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-item-meta{font-size:11.5px;color:var(--text-3);margin-top:2px}
+.file-item-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.file-tag{font-size:11px;background:var(--accent-lite);color:var(--accent-text);padding:2px 8px;border-radius:10px;white-space:nowrap;cursor:pointer;border:none;font-family:inherit;transition:opacity .12s}
+.file-tag:hover{opacity:.7}
+.file-item-actions{display:flex;align-items:center;gap:2px;flex-shrink:0;padding-top:1px}
+.file-action-btn{background:none;border:none;cursor:pointer;color:var(--text-3);padding:4px 7px;border-radius:var(--r-sm);font-size:12px;font-family:inherit;transition:all .12s;display:flex;align-items:center;gap:4px;text-decoration:none;line-height:1}
+.file-action-btn:hover{color:var(--text);background:var(--surface-2)}
+.file-action-btn.del:hover{color:var(--red);background:var(--red-bg)}
+.file-upload-progress{display:flex;align-items:center;gap:8px;padding:8px 0;font-size:12.5px;color:var(--text-2)}
+.file-upload-bar{flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.file-upload-bar-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .15s}
+/* ── File chips (task drawer / event modal) ── */
+.td-files{margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.td-files-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.td-files-label{font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em}
+.td-file-chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px;min-height:4px}
+.td-file-chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:3px 4px 3px 8px;color:var(--text-2)}
+.td-file-chip a{color:var(--accent-text);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px}
+.td-file-chip a:hover{text-decoration:underline}
+.td-file-chip-del{background:none;border:none;cursor:pointer;color:var(--text-3);font-size:14px;line-height:1;padding:0 2px;transition:color .12s;flex-shrink:0}
+.td-file-chip-del:hover{color:var(--red)}
+.td-file-picker-list{display:flex;flex-direction:column;gap:1px;margin-top:4px;border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;max-height:160px;overflow-y:auto}
+.td-file-picker-item{display:flex;align-items:center;gap:7px;padding:7px 10px;font-size:12.5px;color:var(--text-2);cursor:pointer;background:var(--surface);transition:background .1s}
+.td-file-picker-item:hover{background:var(--surface-2);color:var(--text)}
+.td-file-picker-item span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.td-file-row-btns{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.td-attach-btn{font-size:12px;color:var(--text-2);background:none;border:1px dashed var(--border-2);padding:3px 9px;border-radius:8px;cursor:pointer;font-family:inherit;transition:all .12s}
+.td-attach-btn:hover{border-color:var(--accent);color:var(--accent-text)}
 
 /* ── Share modal ── */
 .share-collab-list{margin-top:12px;display:flex;flex-direction:column;gap:4px}
@@ -696,6 +733,17 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
             <div class="section-header"><span class="section-title">Notes</span></div>
             <textarea class="notes-area" id="d-notes" placeholder="Any notes, links, or context…" oninput="saveNotes()"></textarea>
           </div>
+          <div class="section" id="d-files-section">
+            <div class="section-header">
+              <span class="section-title">Files</span>
+              <button class="btn btn-sm" id="d-files-upload-btn" onclick="triggerFileUpload()" style="display:none">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 8.5V2M3.5 4.5L6 2l2.5 2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M1.5 9.5h9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                Upload
+              </button>
+            </div>
+            <div id="d-files-list"><div class="files-empty">No files yet.</div></div>
+            <input type="file" id="file-upload-input" multiple style="display:none" onchange="handleFileUpload(this,null)">
+          </div>
         </div>
         <div class="detail-sidebar">
           <div class="section">
@@ -851,6 +899,13 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
         <button class="btn btn-ghost btn-sm" onclick="addModalLink()">+ Add link</button>
       </div>
       <div id="ev-links-list"></div>
+    </div>
+    <!-- Files row -->
+    <div class="form-field" id="ev-files-field" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <label style="margin-bottom:0">Files</label>
+      </div>
+      <div id="ev-files-list"></div>
     </div>
     <!-- Linked task row — shown when editing event with linked task -->
     <div id="ev-linked-task-row" style="display:none;margin-bottom:14px;align-items:center;gap:8px">
@@ -1044,7 +1099,9 @@ let modalLinks       = [];     // [{id,label,url}] — links being edited in the
 let taskGroupMode    = 'all';  // 'all' | 'milestone'
 let hideDoneTasks    = false;
 let sharePlannerId   = null;
+let pendingEventId   = null;   // pre-generated ID for new event (for file linking)
 const expandedTasks  = new Set();
+const openFilePickers = new Set();  // task IDs with file link picker open
 const collapsedMsGroups = new Set();
 
 // ══════════════════════════════════════
@@ -1548,6 +1605,7 @@ function renderDetailPlanning(p) {
 
   renderDetailTasks(p);
   document.getElementById('d-notes').value = p.notes||'';
+  renderFilesSection(p);
 
   // Deadline / trip sidebar
   const deadlineEl = document.getElementById('d-deadline-display');
@@ -1660,6 +1718,7 @@ function renderTaskDrawerContent(p, t) {
       <button class="btn btn-sm" onclick="addTaskItem('${t.id}')">Add</button>
     </div>
     ${potentialSlotHtml}
+    ${renderTaskFiles(p, t)}
     <div class="td-footer">
       ${linkedEvent
         ? `<span class="td-event-link" onclick="jumpToItinEvent('${t.linkedEventDate}','${t.linkedEventId}')">📅 ${fmtDateShort(t.linkedEventDate)} · ${linkedEvent.title}</span>
@@ -2465,6 +2524,7 @@ function selectEvType(key, el) {
 
 function openAddEventModal(dayDate) {
   addEventDay = dayDate; editingEventId = null; addingFromTaskId = null;
+  pendingEventId = uid();
   document.getElementById('modal-event-title').textContent = 'Add event';
   document.getElementById('ev-title').value = '';
   document.getElementById('ev-time').value = '';
@@ -2476,6 +2536,7 @@ function openAddEventModal(dayDate) {
   document.getElementById('ev-day-field').style.display = 'none';
   document.getElementById('ev-linked-task-row').style.display = 'none';
   buildEventTypePicker('flight');
+  renderEventModalFiles();
   openModal('modal-event');
   setTimeout(() => document.getElementById('ev-title').focus(), 50);
 }
@@ -2487,6 +2548,7 @@ function openEditEventModal(dayDate, evId) {
   const ev = (day.events||[]).find(x=>x.id===evId); if (!ev) return;
 
   addEventDay = dayDate; editingEventId = evId; addingFromTaskId = null;
+  pendingEventId = null;
   document.getElementById('modal-event-title').textContent = 'Edit event';
   document.getElementById('ev-title').value = ev.title||'';
   document.getElementById('ev-time').value = ev.time||'';
@@ -2506,6 +2568,7 @@ function openEditEventModal(dayDate, evId) {
     } else linkedTaskRow.style.display = 'none';
   } else linkedTaskRow.style.display = 'none';
   buildEventTypePicker(ev.type||'note');
+  renderEventModalFiles();
   openModal('modal-event');
 }
 
@@ -2527,7 +2590,7 @@ function saveEvent() {
   const endTime = startTime ? (document.getElementById('ev-endtime').value || null) : null;
   const links = modalLinks.map(l=>({id:l.id||uid(),label:l.label.trim(),url:l.url.trim()})).filter(l=>l.url);
   const ev = {
-    id: editingEventId || uid(),
+    id: editingEventId || pendingEventId || uid(),
     type: selectedEvType,
     title,
     time: startTime,
@@ -2998,6 +3061,314 @@ document.querySelectorAll('.modal-bg').forEach(bg => {
 document.addEventListener('keydown', e => {
   if(e.key==='Escape') document.querySelectorAll('.modal-bg.open').forEach(m=>m.classList.remove('open'));
 });
+
+// ══════════════════════════════════════
+// FILE ATTACHMENTS
+// ══════════════════════════════════════
+
+function getFileTypeIcon(mimeType) {
+  if (!mimeType) return '📎';
+  if (mimeType.startsWith('image/')) return '🖼️';
+  if (mimeType.startsWith('video/')) return '🎬';
+  if (mimeType.startsWith('audio/')) return '🎵';
+  if (mimeType === 'application/pdf') return '📄';
+  if (mimeType.includes('word') || mimeType.includes('document')) return '📝';
+  if (mimeType.includes('sheet') || mimeType.includes('excel') || mimeType.includes('spreadsheet')) return '📊';
+  if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return '📑';
+  if (mimeType.includes('zip') || mimeType.includes('compressed') || mimeType.includes('archive')) return '🗜️';
+  return '📎';
+}
+
+function fmtFileSize(bytes) {
+  if (!bytes) return '';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return Math.round(bytes / 1024) + ' KB';
+  return (bytes / 1048576).toFixed(1) + ' MB';
+}
+
+function getFilesForTask(p, taskId) {
+  return (p.files||[]).filter(f => (f.linkedTaskIds||[]).includes(taskId));
+}
+function getFilesForEvent(p, eventId) {
+  return (p.files||[]).filter(f => f.linkedEventIds?.[eventId]);
+}
+
+// ── Files section render ───────────────
+function renderFilesSection(p) {
+  const el = document.getElementById('d-files-list');
+  const btn = document.getElementById('d-files-upload-btn');
+  if (!el) return;
+  if (btn) btn.style.display = driveTokenValid ? '' : 'none';
+  const files = p?.files || [];
+  if (!files.length) {
+    el.innerHTML = driveTokenValid
+      ? '<div class="files-empty">No files yet — click Upload to attach files to this project.</div>'
+      : '<div class="files-empty">Connect Google Drive to upload and manage files.</div>';
+    return;
+  }
+  el.innerHTML = files.map(f => renderFileItem(p, f)).join('');
+}
+
+function renderFileItem(p, f) {
+  const icon = getFileTypeIcon(f.mimeType);
+  const size = fmtFileSize(f.size);
+  const date = f.uploadedAt ? fmtDateShort(f.uploadedAt.slice(0,10)) : '';
+  const meta = [size, date].filter(Boolean).join(' · ');
+
+  const tags = [];
+  for (const tid of (f.linkedTaskIds||[])) {
+    const task = (p.tasks||[]).find(t => t.id===tid);
+    if (task) {
+      const label = task.text.length > 28 ? task.text.slice(0,28)+'…' : task.text;
+      tags.push(`<button class="file-tag" onclick="jumpToTask('${tid}')" title="${task.text.replace(/"/g,'&quot;')}">📋 ${label}</button>`);
+    }
+  }
+  if (f.linkedEventIds) {
+    for (const [eid, dateStr] of Object.entries(f.linkedEventIds)) {
+      const day = (p.days||[]).find(d => d.date===dateStr);
+      const ev = (day?.events||[]).find(e => e.id===eid);
+      if (ev) {
+        const label = ev.title.length > 22 ? ev.title.slice(0,22)+'…' : ev.title;
+        tags.push(`<button class="file-tag" onclick="jumpToItinEvent('${dateStr}','${eid}')" title="${ev.title.replace(/"/g,'&quot;')}">📅 ${fmtDateShort(dateStr)} · ${label}</button>`);
+      }
+    }
+  }
+  const tagsHtml = tags.length ? `<div class="file-item-tags">${tags.join('')}</div>` : '';
+
+  return `<div class="file-item" id="file-item-${f.id}">
+    <div class="file-type-icon">${icon}</div>
+    <div class="file-item-info">
+      <div class="file-item-name">${f.name}</div>
+      ${meta ? `<div class="file-item-meta">${meta}</div>` : ''}
+      ${tagsHtml}
+    </div>
+    <div class="file-item-actions">
+      <a class="file-action-btn" href="${f.webViewLink}" target="_blank" rel="noopener" title="Open in Drive">
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M4.5 2H2a1 1 0 00-1 1v6a1 1 0 001 1h6a1 1 0 001-1V6.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M7 1h3v3M10 1L5.5 5.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Open
+      </a>
+      ${driveTokenValid ? `<button class="file-action-btn del" onclick="deleteProjectFile('${f.id}')" title="Delete">
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1.5 2.5h8M4 2.5V1.5h3v1M4.5 2.5v5.5M6.5 2.5v5.5M2 2.5l.5 7h6l.5-7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Delete
+      </button>` : ''}
+    </div>
+  </div>`;
+}
+
+// ── File upload ────────────────────────
+function triggerFileUpload() {
+  if (!driveTokenValid) { alert('Connect Google Drive to upload files.'); return; }
+  document.getElementById('file-upload-input').value = '';
+  document.getElementById('file-upload-input').click();
+}
+
+async function handleFileUpload(input, taskId) {
+  const p = getActiveProject(); if (!p) return;
+  if (!input.files?.length) return;
+  const files = Array.from(input.files);
+  input.value = '';
+  const listEl = document.getElementById('d-files-list');
+
+  for (const file of files) {
+    const progId = 'prog-' + uid();
+    listEl.insertAdjacentHTML('afterbegin', `<div class="file-upload-progress" id="${progId}">
+      <span>${getFileTypeIcon(file.type)} ${file.name}</span>
+      <div class="file-upload-bar"><div class="file-upload-bar-fill" id="${progId}-bar" style="width:0%"></div></div>
+      <span id="${progId}-pct" style="flex-shrink:0;font-size:12px;min-width:28px;text-align:right">0%</span>
+    </div>`);
+    try {
+      const folderId = await getOrCreateAttachFolder(p);
+      const result = await driveUploadFileWithProgress(file, folderId, pct => {
+        const bar = document.getElementById(`${progId}-bar`);
+        const pctEl = document.getElementById(`${progId}-pct`);
+        if (bar) bar.style.width = pct + '%';
+        if (pctEl) pctEl.textContent = pct + '%';
+      });
+      const projectFile = {
+        id: uid(), name: file.name,
+        mimeType: file.type || 'application/octet-stream',
+        driveFileId: result.id, webViewLink: result.webViewLink,
+        size: file.size || null,
+        uploadedAt: new Date().toISOString(),
+        linkedTaskIds: taskId ? [taskId] : [],
+        linkedEventIds: {},
+      };
+      updateData(d => {
+        const proj = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+        if (proj) { proj.files = proj.files||[]; proj.files.push(projectFile); }
+      });
+    } catch(e) {
+      console.error('Upload failed', file.name, e);
+      const progEl = document.getElementById(progId);
+      if (progEl) { progEl.innerHTML = `<span style="color:var(--red-t)">✗ ${file.name}: ${e.message||'upload failed'}</span>`; }
+      await new Promise(r => setTimeout(r, 3000));
+    } finally {
+      document.getElementById(progId)?.remove();
+    }
+  }
+  const fresh = getActiveProject();
+  renderFilesSection(fresh);
+  if (taskId) renderDetailTasks(fresh);
+}
+
+async function getOrCreateAttachFolder(p) {
+  if (p.driveAttachFolderId) return p.driveAttachFolderId;
+  const plannerEntry = drivePlannerMap[activePlannerId];
+  if (!plannerEntry?.folderId) throw new Error('No planner Drive folder — save the planner first.');
+  const projFolderId = await driveGetOrCreateFolder(p.name, plannerEntry.folderId);
+  const attachFolderId = await driveGetOrCreateFolder('attachments', projFolderId);
+  updateData(d => {
+    const proj = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===p.id);
+    if (proj) proj.driveAttachFolderId = attachFolderId;
+  });
+  return attachFolderId;
+}
+
+async function driveUploadFileWithProgress(file, parentFolderId, onProgress) {
+  const token = gapi.client.getToken()?.access_token;
+  if (!token) throw new Error('Not signed in to Drive');
+  const meta = JSON.stringify({ name: file.name, mimeType: file.type||'application/octet-stream', parents: [parentFolderId] });
+  const initRes = await fetch(`https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,webViewLink`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json; charset=UTF-8',
+      'X-Upload-Content-Type': file.type || 'application/octet-stream',
+      'X-Upload-Content-Length': file.size,
+    },
+    body: meta,
+  });
+  if (!initRes.ok) throw new Error(`Could not initiate upload (${initRes.status})`);
+  const uploadUrl = initRes.headers.get('Location');
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', uploadUrl);
+    xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+    xhr.upload.addEventListener('progress', e => { if (e.lengthComputable) onProgress(Math.round(e.loaded / e.total * 100)); });
+    xhr.addEventListener('load', () => {
+      if (xhr.status >= 200 && xhr.status < 300) resolve(JSON.parse(xhr.responseText));
+      else reject(new Error(`Upload failed: HTTP ${xhr.status}`));
+    });
+    xhr.addEventListener('error', () => reject(new Error('Network error during upload')));
+    xhr.send(file);
+  });
+}
+
+async function deleteProjectFile(fileId) {
+  const p = getActiveProject(); if (!p) return;
+  const f = (p.files||[]).find(x => x.id===fileId); if (!f) return;
+  if (!confirm(`Delete "${f.name}"?\nThis will move the file to Google Drive trash.`)) return;
+  if (driveTokenValid && f.driveFileId) {
+    try { await gapi.client.drive.files.update({ fileId: f.driveFileId, resource: { trashed: true } }); }
+    catch(e) { console.warn('Could not trash Drive file', e); }
+  }
+  updateData(d => {
+    const proj = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+    if (proj) proj.files = (proj.files||[]).filter(x => x.id!==fileId);
+  });
+  renderFilesSection(getActiveProject());
+}
+
+// ── File linking ───────────────────────
+function toggleFileTaskLink(fileId, taskId) {
+  updateData(d => {
+    const proj = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+    const f = (proj?.files||[]).find(x => x.id===fileId); if (!f) return;
+    f.linkedTaskIds = f.linkedTaskIds||[];
+    const idx = f.linkedTaskIds.indexOf(taskId);
+    if (idx >= 0) f.linkedTaskIds.splice(idx, 1); else f.linkedTaskIds.push(taskId);
+  });
+  openFilePickers.delete(taskId);
+  const p = getActiveProject();
+  renderDetailTasks(p);
+  renderFilesSection(p);
+}
+
+function toggleFileEventLink(fileId) {
+  const evId = editingEventId || pendingEventId; if (!evId) return;
+  updateData(d => {
+    const proj = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+    const f = (proj?.files||[]).find(x => x.id===fileId); if (!f) return;
+    f.linkedEventIds = f.linkedEventIds||{};
+    if (f.linkedEventIds[evId]) delete f.linkedEventIds[evId];
+    else f.linkedEventIds[evId] = addEventDay || '';
+  });
+  renderEventModalFiles();
+  renderFilesSection(getActiveProject());
+}
+
+function renderEventModalFiles() {
+  const evId = editingEventId || pendingEventId;
+  const p = getActiveProject();
+  const field = document.getElementById('ev-files-field');
+  if (!field || !evId || !p) { if (field) field.style.display = 'none'; return; }
+  field.style.display = '';
+  const el = document.getElementById('ev-files-list');
+  const projectFiles = p.files || [];
+  if (!projectFiles.length) {
+    el.innerHTML = '<div style="font-size:12.5px;color:var(--text-3)">No project files yet. Upload from the Files card on the project page.</div>';
+    return;
+  }
+  const linked = projectFiles.filter(f => f.linkedEventIds?.[evId]);
+  const unlinked = projectFiles.filter(f => !f.linkedEventIds?.[evId]);
+  let html = '<div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">';
+  html += linked.map(f => `<div class="td-file-chip">
+    <span>${getFileTypeIcon(f.mimeType)}</span>
+    <a href="${f.webViewLink}" target="_blank" rel="noopener">${f.name.length>28?f.name.slice(0,28)+'…':f.name}</a>
+    <button class="td-file-chip-del" onclick="toggleFileEventLink('${f.id}')" title="Unlink">×</button>
+  </div>`).join('');
+  if (unlinked.length) {
+    html += `<select onchange="if(this.value){toggleFileEventLink(this.value);this.value=''}"
+      style="font-size:12px;padding:4px 8px;border:1px solid var(--border-2);border-radius:8px;background:var(--surface);color:var(--text-2);font-family:inherit;cursor:pointer">
+      <option value="">+ Link file…</option>
+      ${unlinked.map(f=>`<option value="${f.id}">${f.name}</option>`).join('')}
+    </select>`;
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+// ── Task drawer file section ───────────
+function renderTaskFiles(p, t) {
+  const projectFiles = p.files||[];
+  if (!projectFiles.length && !driveTokenValid) return '';
+  const linked = getFilesForTask(p, t.id);
+  const unlinked = projectFiles.filter(f => !(f.linkedTaskIds||[]).includes(t.id));
+  const pickerOpen = openFilePickers.has(t.id);
+
+  const chips = linked.map(f => `<div class="td-file-chip">
+    <span>${getFileTypeIcon(f.mimeType)}</span>
+    <a href="${f.webViewLink}" target="_blank" rel="noopener">${f.name.length>24?f.name.slice(0,24)+'…':f.name}</a>
+    <button class="td-file-chip-del" onclick="toggleFileTaskLink('${f.id}','${t.id}')" title="Unlink">×</button>
+  </div>`).join('');
+
+  const pickerHtml = pickerOpen && unlinked.length ? `<div class="td-file-picker-list">
+    ${unlinked.map(f=>`<div class="td-file-picker-item" onclick="toggleFileTaskLink('${f.id}','${t.id}')">
+      <span>${getFileTypeIcon(f.mimeType)}</span><span>${f.name}</span>
+    </div>`).join('')}
+  </div>` : (pickerOpen && !unlinked.length ? `<div style="font-size:12px;color:var(--text-3);padding:4px 0">All project files are already linked.</div>` : '');
+
+  const btns = `<div class="td-file-row-btns">
+    ${unlinked.length || pickerOpen ? `<button class="td-attach-btn" onclick="toggleTaskFilePicker('${t.id}')">${pickerOpen ? 'Cancel' : '+ Link file'}</button>` : ''}
+    ${driveTokenValid ? `<label class="td-attach-btn" style="cursor:pointer">
+      ↑ Upload
+      <input type="file" multiple style="display:none" onchange="handleFileUpload(this,'${t.id}')">
+    </label>` : ''}
+  </div>`;
+
+  return `<div class="td-files">
+    <div class="td-files-head"><span class="td-files-label">📎 Files</span></div>
+    <div class="td-file-chips">${chips}</div>
+    ${btns}
+    ${pickerHtml}
+  </div>`;
+}
+
+function toggleTaskFilePicker(taskId) {
+  if (openFilePickers.has(taskId)) openFilePickers.delete(taskId);
+  else openFilePickers.add(taskId);
+  renderDetailTasks(getActiveProject());
+}
 
 // ══════════════════════════════════════
 // GOOGLE DRIVE
