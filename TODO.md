@@ -144,16 +144,31 @@ would only be needed if users want to browse ALL their Drive files — not requi
 
 ## Itinerary Improvements
 
-### Multi-day hotel events
-- [ ] Hotel event gets `checkInDate`, `checkOutDate` fields (replacing single-day `date`); check-in and check-out times stored separately (`checkInTime`, `checkOutTime`)
-- [ ] Event modal: when type = `hotel`, show date range picker (check-in date / check-out date) and separate time fields for each; hide the normal single-day selector
-- [ ] Data: hotel is stored once on the check-in day (or as a top-level span object) — on render it is **virtualised** into multiple itinerary appearances:
-  - **Check-in day** → timed event block "🏨 Check in · [Hotel name]" at check-in time
-  - **Intermediate days** → grey all-day banner "🏨 [Hotel name]" at the top of each day column (list view: before timed events; calendar view: full-width banner above the hour grid)
-  - **Check-out day** → timed event block "🏨 Check out · [Hotel name]" at check-out time
-- [ ] Editing: clicking any of the virtualised rows opens the same hotel edit modal
-- [ ] Calendar view: all-day banners sit in a sticky header band above the time grid, similar to how Google Calendar shows multi-day events
-- [ ] Export (Markdown + iCal): hotel appears as a single span entry with check-in/check-out dates
+### Multi-day / span events
+Events that span more than one day (hotels, car hire, cruises, etc.) need a generic model rather than hotel-specific fields.
+
+**Data model change:**
+- [ ] Add optional `endDate: string | null` (ISO date) to `Event`; existing `time` becomes the start time, new `endTime` on the `endDate` becomes the end time
+- [ ] `endDate` absent (or equal to the event's day) = single-day event, no behaviour change
+- [ ] Event is stored on its **start day** as today; `endDate` drives virtualisation on render
+- [ ] No structural change needed to `Day[]` — span events are not duplicated in storage
+
+**Event modal:**
+- [ ] When `endDate` is set (or when type is `hotel`/`car`), show a second date field ("End date") and a second time field ("End time") alongside the existing start time
+- [ ] For `hotel` type, label the fields "Check-in" / "Check-out" in the UI; for others use "Start" / "End"
+
+**Itinerary rendering — virtualised rows:**
+- [ ] On each day covered by a span event, inject a virtualised appearance without duplicating data:
+  - **Start day** → normal timed event row/block with a "→ ends [date]" tag
+  - **Intermediate days** → subtle all-day banner (e.g. "🏨 Grand Hotel · night 2 of 4") shown at the top of the day before timed events
+  - **End day** → timed event row/block labelled as the end (e.g. "🏨 Check out · Grand Hotel")
+- [ ] For `hotel` specifically, use "Check in" / "Check out" labels on start/end rows
+- [ ] Clicking any virtualised row opens the original event's edit modal
+- [ ] Calendar view: all-day banners sit in a sticky header band above the time grid (Google Calendar style), spanning the relevant day columns
+
+**Export:**
+- [ ] Markdown: single entry with date range
+- [ ] iCal (future): `DTSTART` / `DTEND` span
 
 ## General
 - [ ] Responsive mobile UI
