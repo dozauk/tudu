@@ -2378,8 +2378,9 @@ function renderCalendarView(p, days, todayStr, phase) {
     const spanEventsForDay = getSpanEventsForDay(days, day.date);
     const spanCalHtml = spanEventsForDay.map(({ ev, startDate, isEnd }) => {
       const et2 = EVENT_TYPES[ev.type] || EVENT_TYPES.note;
+      const endTimeStr = isEnd && ev.endTime ? ` · ${fmtTime(ev.endTime)}` : '';
       const label = isEnd
-        ? (ev.type === 'hotel' ? `Check-out: ${ev.title}` : ev.type === 'car' ? `Drop-off: ${ev.title}` : `End: ${ev.title}`)
+        ? (ev.type === 'hotel' ? `Check-out: ${ev.title}${endTimeStr}` : ev.type === 'car' ? `Drop-off: ${ev.title}${endTimeStr}` : `End: ${ev.title}${endTimeStr}`)
         : ev.title;
       return `<div class="itin-cal-untimed-ev"
         style="background:${c.hex}33;border-left:3px solid ${c.hex};font-style:${isEnd?'normal':'italic'}"
@@ -2461,9 +2462,10 @@ function renderSpanBanner(targetDate, ev, startDate, isEnd) {
   const nightNum    = Math.round((dateOnly(targetDate)  - dateOnly(startDate)) / 86400000);
   let label;
   if (isEnd) {
-    label = ev.type === 'hotel' ? `Check-out: <strong>${ev.title}</strong>`
-          : ev.type === 'car'   ? `Drop-off: <strong>${ev.title}</strong>`
-          :                        `End: <strong>${ev.title}</strong>`;
+    const endTimeStr = ev.endTime ? ` · ${fmtTime(ev.endTime)}` : '';
+    label = ev.type === 'hotel' ? `Check-out: <strong>${ev.title}</strong>${endTimeStr}`
+          : ev.type === 'car'   ? `Drop-off: <strong>${ev.title}</strong>${endTimeStr}`
+          :                        `End: <strong>${ev.title}</strong>${endTimeStr}`;
   } else {
     const countLabel = ev.type === 'hotel' ? `night ${nightNum} of ${totalNights}`
                      : ev.type === 'car'   ? `day ${nightNum} of ${totalNights}`
@@ -2486,7 +2488,7 @@ function renderEventRow(dayDate, ev) {
       <div class="itin-event-icon-col">${et.icon}</div>
       <div class="itin-event-body">
         <div class="itin-event-header">
-          ${ev.time ? `<span class="itin-event-time">${fmtTime(ev.time)}${ev.endTime ? ' – '+fmtTime(ev.endTime) : ''}</span>` : ''}
+          ${ev.time ? `<span class="itin-event-time">${fmtTime(ev.time)}${ev.endTime && !ev.endDate ? ' – '+fmtTime(ev.endTime) : ''}</span>` : ''}
           <span class="itin-event-title">${ev.title}</span>
           ${ev.endDate ? `<span class="itin-span-end-tag">→ ${fmtDateShort(ev.endDate)}</span>` : ''}
         </div>
@@ -2511,12 +2513,16 @@ function toggleItinDay(dateStr) {
 
 function refreshItinDay(dateStr) {
   const p = getActiveProject(); if (!p) return;
-  // Calendar view: full re-render (cheap enough for a trip)
-  if (itinView === 'calendar') { renderItinerary(p); return; }
-  // List view: patch just the affected day
+  // If any event on this day is a span event, do a full re-render so all covered days update
   const days = getTripDays(p);
-  const day = days.find(d => d.date === dateStr); if (!day) return;
-  const events = [...(day.events||[])].sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
+  const day = days.find(d => d.date === dateStr);
+  const hasSpan = (day?.events||[]).some(ev => ev.endDate);
+  if (itinView === 'calendar' || hasSpan || dateStr === isoDate(today())) {
+    renderItinerary(p);
+    return;
+  }
+  // List view: patch just the affected day
+  const events = [...(day?.events||[])].sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
   const potentialTasks = getPotentialSlotsForDay(p, dateStr);
   const spanEvents = getSpanEventsForDay(days, dateStr);
   const spanHtml = spanEvents.map(({ev, startDate, isEnd}) => renderSpanBanner(dateStr, ev, startDate, isEnd)).join('');
@@ -2529,26 +2535,6 @@ function refreshItinDay(dateStr) {
   if (dayEl) {
     const countEl = dayEl.querySelector('.itin-event-count');
     if (countEl) countEl.textContent = events.length ? events.length+' event'+(events.length!==1?'s':'') : '';
-  }
-  if (dateStr === isoDate(today())) renderItinerary(p);
-  // If this event has an endDate, also refresh those affected days
-  for (const ev of (day.events||[])) {
-    if (ev.endDate) {
-      const allDays = getTripDays(p);
-      for (const d2 of allDays) {
-        if (d2.date > dateStr && d2.date <= ev.endDate) {
-          const el2 = document.getElementById(`itin-events-${d2.date}`);
-          if (el2) {
-            const sp2 = getSpanEventsForDay(allDays, d2.date);
-            const spHtml2 = sp2.map(({ev:e2, startDate:s2, isEnd:ie}) => renderSpanBanner(d2.date, e2, s2, ie)).join('');
-            const evs2 = [...(d2.events||[])].sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
-            const pot2 = getPotentialSlotsForDay(p, d2.date);
-            el2.innerHTML = spHtml2 + (evs2.length ? evs2.map(e2 => renderEventRow(d2.date, e2)).join('')
-              : !pot2.length && !sp2.length ? `<div class="itin-empty">No events — add one below</div>` : '');
-          }
-        }
-      }
-    }
   }
 }
 
