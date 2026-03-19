@@ -144,6 +144,11 @@ would only be needed if users want to browse ALL their Drive files — not requi
 
 ## Itinerary Improvements
 
+### Calendar — overlapping timed events
+- [ ] When two or more timed events overlap in a day column, split the column width and display them side by side (Outlook/Google Calendar style)
+- Currently events are nudged left by 4 px per slot, which works for minor overlaps but collapses for many concurrent events
+- Proper approach: build overlap groups (events whose time ranges intersect), compute each event's column slot count and slot index within the group, then set `left` and `width` so all events in a group share the available column width equally
+
 ### Multi-day / span events
 Events that span more than one day (hotels, car hire, cruises, etc.) need a generic model rather than hotel-specific fields.
 
