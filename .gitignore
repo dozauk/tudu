@@ -1,3 +1,6 @@
 # Windows security zone metadata
 *.Identifier
 *.endpointdlp
+
+# Google OAuth credentials — never commit these
+client_secret*.json

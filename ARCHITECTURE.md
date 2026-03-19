@@ -196,12 +196,44 @@ updateData(fn)
       → update index.json
 ```
 
-### Sharing (Phase 4 — not yet implemented)
-See TODO.md "Sharing Design" section. Key points:
-- Stays within `drive.file` scope — no security assessment needed
-- Google Picker "opens" the shared folder, granting access
-- `SharedRef[]` added to Root; shared planners rendered in a separate sidebar section
-- Viewer/editor role read from `drive.permissions.list` on load
+### Sharing (Phase 4 — implemented)
+
+**Owner shares:**
+1. Share button appears on planner items in sidebar (when Drive signed in)
+2. `openShareModal(plannerId)` → `drive.permissions.list` to load current collaborators
+3. `shareWithUser()` → `drive.permissions.create` (type=user, role=writer|reader, sendNotificationEmail=true)
+4. `revokeShare(folderId, permId)` → `drive.permissions.delete`
+
+**Collaborator joins:**
+1. "Add shared planner" button in sidebar (shown when Drive signed in)
+2. `openSharedPlannerPicker()` → loads Google Picker (requires API key in Drive settings)
+3. User selects the shared folder → `handlePickerResult()`
+4. Reads `planner.json`, checks `drive.permissions.list` for own role, stores as `_shared` planner
+
+**`_shared` metadata on Planner objects:**
+```js
+planner._shared = {
+  folderId: string,        // Drive folder ID
+  dataFileId: string,      // planner.json file ID
+  accessRole: 'reader' | 'writer',
+  lastSynced: string,      // ISO timestamp — shown in sidebar
+}
+```
+
+Shared planners live in `d.planners` alongside owned planners. `_shared` presence distinguishes them.
+
+**`driveSaveData` routing:**
+- Owned planners: written to their own files + listed in `index.json`
+- Shared planners (writer): written to `pl._shared.dataFileId` directly; excluded from `index.json`
+- Shared planners (reader): no write attempt
+
+**Auto-refresh:** `document.addEventListener('visibilitychange')` → `refreshSharedPlanners()` on tab focus.
+Last-synced timestamp shown in sidebar under shared planner name.
+
+**Google Picker setup:**
+- Requires an API Key (stored in `tudu_drive_config.apiKey`)
+- `gapi.load('picker', ...)` lazy-loaded on first use
+- Uses `DocsView` filtered to folders — lets user navigate to any folder they have access to
 
 ---
 

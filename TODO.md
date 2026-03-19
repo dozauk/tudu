@@ -33,14 +33,12 @@ My Drive/
 - Auto-migrates old v1 `tudu-data.json` on first sign-in; renames it as backup
 - Each `driveSaveData()` writes all planner files + updated index
 
-### Phase 2b — Folder creation on CRUD  ← NEXT
+### Phase 2b — Folder management  ✅ DONE
 - On planner create: `driveSaveData` already creates the folder automatically
-- On planner rename: rename the Drive folder to match new name + icon
-  - `PATCH /drive/v3/files/{folderId}` with `{ name: newName }`
-  - Trigger in `savePlannerEdits()` after `updateData`
-- On planner delete: offer to trash Drive folder (with confirm); update index
-- On project create: create `{Project Name}/` and `attachments/` subfolders under planner folder
-  - Store `driveFolderId` on Project object
+- On planner rename: `driveRenamePlannerFolder()` — `PATCH /drive/v3/files/{folderId}` with `{ name: newName+icon }` — triggered in `savePlannerEdits()`
+- On planner delete (owned): `drivePlannerFolderTrash()` — moves Drive folder to trash automatically
+- On planner delete (shared): just removes from `d.planners` via `removeSharedPlanner()`
+- Project subfolder + attachments deferred to Phase 3 (needed for file uploads)
 
 ### Phase 3 — File attachments
 - "Attach file" button on task drawer + event modal
@@ -114,10 +112,10 @@ Shared with me        ← SharedRef[] where cachedPlanner exists
 
 ### Build order for Phase 4
 ```
-4a  Share button on planner header → invite by email (drive.permissions.create)
-4b  Picker API + "Add shared planner" flow
-4c  Viewer/editor enforcement + focus-refresh + last-synced display
-4d  Collaborator list + revoke in share modal
+4a  Share button on planner header → invite by email (drive.permissions.create)  ✅ DONE
+4b  Picker API + "Add shared planner" flow                                        ✅ DONE
+4c  Viewer/editor enforcement + focus-refresh + last-synced display               ✅ DONE (partial — viewer writes silently fail, no input disabling yet)
+4d  Collaborator list + revoke in share modal                                     ✅ DONE
 ```
 
 ### Scope note

@@ -520,6 +520,29 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .drive-settings-instructions li{margin-bottom:2px}
 .drive-settings-instructions a{color:var(--accent-text)}
 .drive-settings-instructions code{font-size:11.5px;background:var(--surface-2);padding:1px 5px;border-radius:4px;border:1px solid var(--border)}
+
+/* ── Share modal ── */
+.share-collab-list{margin-top:12px;display:flex;flex-direction:column;gap:4px}
+.share-collab-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r-sm);background:var(--surface-2)}
+.share-collab-info{flex:1;min-width:0}
+.share-collab-name{font-size:13px;font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.share-collab-email{font-size:11.5px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.share-collab-role{font-size:12px;color:var(--text-2);flex-shrink:0}
+.share-collab-revoke{background:none;border:none;cursor:pointer;color:var(--text-3);padding:3px 6px;border-radius:3px;font-size:12px;font-family:inherit;transition:all .12s}
+.share-collab-revoke:hover{color:var(--red);background:var(--red-bg)}
+
+/* ── Shared planners sidebar ── */
+.sb-shared-divider{height:1px;background:var(--border);margin:8px 10px 4px}
+.sb-shared-label{padding:0 16px 4px;font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em}
+.planner-shared-badge{font-size:9px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:1px 5px;color:var(--text-3);flex-shrink:0;margin-left:auto}
+.planner-last-synced{font-size:10.5px;color:var(--text-3);padding:0 10px 4px 41px;line-height:1.3}
+.sb-add-shared-btn{display:flex;align-items:center;gap:8px;padding:6px 10px;margin:2px 6px;border-radius:var(--r-md);cursor:pointer;color:var(--text-3);font-size:12.5px;font-weight:500;background:none;border:1px dashed var(--border);width:calc(100% - 12px);text-align:left;transition:all .12s;font-family:inherit}
+.sb-add-shared-btn:hover{border-color:var(--border-2);color:var(--text-2);background:var(--surface-2)}
+
+/* ── Planner share button ── */
+.planner-share-btn{display:none;position:absolute;right:50px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-3);padding:2px 4px;border-radius:4px;line-height:1;transition:color .12s}
+.planner-share-btn:hover{color:var(--accent-text)}
+.planner-item:hover .planner-share-btn{display:flex;align-items:center}
 </style>
 </head>
 <body>
@@ -548,8 +571,9 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
         Import
       </button>
     </div>
-    <div style="text-align:center;padding-top:4px">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding-top:4px">
       <a href="privacy.html" target="_blank" style="font-size:11px;color:var(--text-3);text-decoration:none" onmouseover="this.style.color='var(--accent-text)'" onmouseout="this.style.color='var(--text-3)'">Privacy policy</a>
+      <span style="font-size:11px;color:var(--text-3)">v0.4.0</span>
     </div>
   </div>
 </nav>
@@ -880,6 +904,10 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
         <label>OAuth 2.0 Client ID</label>
         <input id="drive-client-id-input" placeholder="123456789-abc….apps.googleusercontent.com" style="font-family:monospace;font-size:12px">
       </div>
+      <div class="form-field">
+        <label>API Key <span style="font-size:11px;font-weight:400;color:var(--text-3)">(required for shared planners picker)</span></label>
+        <input id="drive-api-key-input" placeholder="AIzaSy…" style="font-family:monospace;font-size:12px">
+      </div>
       <details style="margin-bottom:16px">
         <summary style="font-size:12.5px;font-weight:500;color:var(--text-2);cursor:pointer;user-select:none;padding:4px 0">How to get a Client ID</summary>
         <ol class="drive-settings-instructions" style="margin-top:8px">
@@ -899,6 +927,35 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
     <div class="modal-actions">
       <button class="btn" onclick="closeModal('modal-drive-settings')">Cancel</button>
       <button class="btn btn-primary" onclick="saveDriveClientId()">Save &amp; connect</button>
+    </div>
+  </div>
+</div>
+
+<!-- Share planner -->
+<div class="modal-bg" id="modal-share">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <h3 class="modal-title">Share planner</h3>
+      <button class="modal-close" onclick="closeModal('modal-share')">×</button>
+    </div>
+    <div class="modal-body" style="padding-bottom:0">
+      <div class="form-field" style="margin-bottom:14px">
+        <label>Invite collaborator</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start">
+          <input id="share-email-input" placeholder="email@example.com" type="email"
+            style="flex:1;min-width:140px" onkeydown="if(event.key==='Enter')shareWithUser()">
+          <select id="share-role-select"
+            style="padding:7px 8px;border:1px solid var(--border-2);border-radius:var(--r-md);background:var(--surface);color:var(--text);font-family:inherit;font-size:13px;height:36px">
+            <option value="writer">Editor</option>
+            <option value="reader">Viewer</option>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="shareWithUser()" style="height:36px">Invite</button>
+        </div>
+      </div>
+      <div id="share-collaborators-list"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-share')">Done</button>
     </div>
   </div>
 </div>
@@ -986,6 +1043,7 @@ let addingFromTaskId = null;   // task ID when adding event from planning
 let modalLinks       = [];     // [{id,label,url}] — links being edited in the event modal
 let taskGroupMode    = 'all';  // 'all' | 'milestone'
 let hideDoneTasks    = false;
+let sharePlannerId   = null;
 const expandedTasks  = new Set();
 const collapsedMsGroups = new Set();
 
@@ -1009,6 +1067,14 @@ function fmtTime(t)      { return t ? t.slice(0,5) : ''; }
 
 function isoDate(d) {
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function timeSince(isoString) {
+  const mins = Math.round((Date.now() - new Date(isoString).getTime()) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.round(hrs / 24)}d ago`;
 }
 
 function nextMilestone(p) {
@@ -1070,20 +1136,51 @@ function getActiveProject()  {
 function renderSidebar() {
   const d = getData();
   const el = document.getElementById('sidebar-planners');
-  if (!d.planners.length) {
-    el.innerHTML = `<div style="padding:8px 16px;font-size:12.5px;color:var(--text-3)">No planners yet</div>`;
-    return;
+  const owned  = (d.planners||[]).filter(pl => !pl._shared);
+  const shared = (d.planners||[]).filter(pl => !!pl._shared);
+
+  let html = '';
+  if (!owned.length) {
+    html += `<div style="padding:8px 16px;font-size:12.5px;color:var(--text-3)">No planners yet</div>`;
+  } else {
+    html += owned.map(pl => `
+      <div class="planner-item ${pl.id===activePlannerId?'active':''}" onclick="selectPlanner('${pl.id}')">
+        <div class="planner-icon">${pl.icon||'📋'}</div>
+        <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${pl.name}</span>
+        <span class="planner-count">${(pl.projects||[]).length}</span>
+        ${driveTokenValid ? `<button class="planner-share-btn" onclick="event.stopPropagation();openShareModal('${pl.id}')" title="Share planner">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M9 2a1.5 1.5 0 110 0M9 2a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm0 5a1.5 1.5 0 100 3 1.5 1.5 0 000-3zM3 6a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm5.25-2.5l-4.5 2m4.5 1.5l-4.5 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </button>` : ''}
+        <button class="planner-edit" onclick="event.stopPropagation();openEditPlannerModal('${pl.id}')" title="Edit planner">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8.5 1.5L10.5 3.5 4 10H2v-2L8.5 1.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="planner-del" onclick="deletePlanner(event,'${pl.id}')">×</button>
+      </div>`).join('');
   }
-  el.innerHTML = d.planners.map(pl => `
-    <div class="planner-item ${pl.id===activePlannerId?'active':''}" onclick="selectPlanner('${pl.id}')">
-      <div class="planner-icon">${pl.icon||'📋'}</div>
-      <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${pl.name}</span>
-      <span class="planner-count">${(pl.projects||[]).length}</span>
-      <button class="planner-edit" onclick="event.stopPropagation();openEditPlannerModal('${pl.id}')" title="Edit planner">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8.5 1.5L10.5 3.5 4 10H2v-2L8.5 1.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
-      </button>
-      <button class="planner-del" onclick="deletePlanner(event,'${pl.id}')">×</button>
-    </div>`).join('');
+
+  if (driveTokenValid || shared.length) {
+    html += `<div class="sb-shared-divider"></div><div class="sb-shared-label">Shared with me</div>`;
+    html += shared.map(pl => {
+      const s = pl._shared;
+      const roleLabel = s.accessRole === 'writer' ? 'editor' : 'viewer';
+      const synced = s.lastSynced ? `<div class="planner-last-synced">Synced ${timeSince(s.lastSynced)}</div>` : '';
+      return `
+        <div class="planner-item ${pl.id===activePlannerId?'active':''}" onclick="selectPlanner('${pl.id}')">
+          <div class="planner-icon">${pl.icon||'📋'}</div>
+          <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${pl.name}</span>
+          <span class="planner-shared-badge">${roleLabel}</span>
+          <button class="planner-del" onclick="event.stopPropagation();removeSharedPlanner('${pl.id}')">×</button>
+        </div>${synced}`;
+    }).join('');
+    if (driveTokenValid) {
+      html += `<button class="sb-add-shared-btn" onclick="openSharedPlannerPicker()">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 2v9M2 6.5h9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        Add shared planner
+      </button>`;
+    }
+  }
+
+  el.innerHTML = html;
 }
 function selectPlanner(id) { activePlannerId = id; renderSidebar(); showList(); }
 
@@ -2527,9 +2624,15 @@ function createPlanner() {
 function deletePlanner(e, id) {
   e.stopPropagation();
   const pl = getData().planners.find(x=>x.id===id);
-  if (!confirm(`Delete planner "${pl?.name}" and all its projects?`)) return;
+  const isShared = !!pl?._shared;
+  const driveNote = (!isShared && driveTokenValid && drivePlannerMap[id]) ? '\n\nThe Google Drive folder will also be moved to trash.' : '';
+  const msg = isShared
+    ? `Remove shared planner "${pl?.name}" from your account? The original will not be affected.`
+    : `Delete planner "${pl?.name}" and all its projects?${driveNote}`;
+  if (!confirm(msg)) return;
   updateData(d => { d.planners = d.planners.filter(x=>x.id!==id); });
   if (activePlannerId===id) activePlannerId = getData().planners[0]?.id||null;
+  if (!isShared && driveTokenValid && drivePlannerMap[id]) drivePlannerFolderTrash(id);
   renderSidebar(); showList();
 }
 function openEditPlannerModal(id) {
@@ -2543,19 +2646,30 @@ function openEditPlannerModal(id) {
 function savePlannerEdits() {
   const name = document.getElementById('ep-name').value.trim();
   if (!name) { document.getElementById('ep-name').focus(); return; }
+  const prev = getData().planners.find(x=>x.id===editingPlannerId);
+  const prevName = prev?.name; const prevIcon = prev?.icon;
   updateData(d => {
     const pl = d.planners.find(x=>x.id===editingPlannerId);
     if (pl) { pl.name=name; pl.icon=selectedIcon; }
   });
+  if (driveTokenValid && (name !== prevName || selectedIcon !== prevIcon)) {
+    driveRenamePlannerFolder(editingPlannerId, name, selectedIcon);
+  }
   closeModal('modal-edit-planner');
   renderSidebar();
   if (activePlannerId===editingPlannerId) showList();
 }
 function deletePlannerFromModal() {
   const pl = getData().planners.find(x=>x.id===editingPlannerId);
-  if (!confirm(`Delete planner "${pl?.name}" and all its projects?`)) return;
+  const isShared = !!pl?._shared;
+  const driveNote = (!isShared && driveTokenValid && drivePlannerMap[editingPlannerId]) ? '\n\nThe Google Drive folder will also be moved to trash.' : '';
+  const msg = isShared
+    ? `Remove shared planner "${pl?.name}" from your account? The original will not be affected.`
+    : `Delete planner "${pl?.name}" and all its projects?${driveNote}`;
+  if (!confirm(msg)) return;
   updateData(d => { d.planners=d.planners.filter(x=>x.id!==editingPlannerId); });
   if (activePlannerId===editingPlannerId) activePlannerId=getData().planners[0]?.id||null;
+  if (!isShared && driveTokenValid && drivePlannerMap[editingPlannerId]) drivePlannerFolderTrash(editingPlannerId);
   closeModal('modal-edit-planner');
   renderSidebar(); showList();
 }
@@ -2938,16 +3052,20 @@ function initGoogleDrive() {
   updateDriveUI();
   if (!clientId) return;
 
+  const { lastEmail } = getDriveConfig();
+
   driveTokenClient = google.accounts.oauth2.initTokenClient({
     client_id: clientId,
     scope: DRIVE_SCOPES,
     callback: handleDriveTokenResponse,
+    hint: lastEmail || undefined,  // pre-fills account chooser on manual sign-in
   });
 
-  // Attempt silent sign-in if we've signed in before
-  const { lastEmail } = getDriveConfig();
+  // Attempt silent sign-in if we've signed in before.
+  // prompt:'none' = no UI shown; GIS silently returns a token if browser session is valid.
+  // Falls back to the 'Sign in' button on error (e.g. session expired, cookies blocked).
   if (lastEmail) {
-    driveTokenClient.requestAccessToken({ prompt: '' });
+    driveTokenClient.requestAccessToken({ prompt: 'none', hint: lastEmail });
   }
 }
 
@@ -2973,7 +3091,6 @@ async function handleDriveTokenResponse(response) {
   // Restore known folder/file IDs from config to skip search on repeat sign-in
   const cfg = getDriveConfig();
   driveRootFolderId = cfg.rootFolderId || null;
-  driveDataFileId   = cfg.dataFileId   || null;
 
   await driveLoadData();
 }
@@ -2989,9 +3106,9 @@ function signOutDrive() {
   gapi.client.setToken('');
   driveTokenValid = false;
   driveUserInfo = null;
-  driveDataFileId = null;
   driveRootFolderId = null;
-  saveDriveConfig({ lastEmail: null, rootFolderId: null, dataFileId: null });
+  drivePlannerMap = {};
+  saveDriveConfig({ lastEmail: null, rootFolderId: null, plannerMap: {} });
   updateDriveUI();
   setSyncStatus('off');
 }
@@ -3055,17 +3172,20 @@ async function driveReadAllPlanners() {
   const indexContent = await driveReadFile(driveIndexFileId);
   const index = JSON.parse(indexContent);
   drivePlannerMap = {};
-  const planners = [];
+  const ownedPlanners = [];
   for (const entry of index.planners || []) {
     drivePlannerMap[entry.id] = { folderId: entry.folderId, dataFileId: entry.dataFileId };
     try {
-      planners.push(JSON.parse(await driveReadFile(entry.dataFileId)));
+      ownedPlanners.push(JSON.parse(await driveReadFile(entry.dataFileId)));
     } catch(e) { console.warn('Could not load planner', entry.id, e); }
   }
-  saveDriveConfig({ plannerMap: drivePlannerMap });
+  // Preserve shared planners already cached in localStorage
   const existing = getData();
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...existing, planners }));
+  const sharedPlanners = (existing.planners||[]).filter(pl => !!pl._shared);
+  saveDriveConfig({ plannerMap: drivePlannerMap });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...existing, planners: [...ownedPlanners, ...sharedPlanners] }));
   init(); // re-render with Drive data
+  refreshSharedPlanners(); // refresh shared planner data from Drive
 }
 
 async function driveSaveData() {
@@ -3080,11 +3200,22 @@ async function driveSaveData() {
     const indexEntries = [];
 
     for (const pl of data.planners || []) {
+      // Shared planners: write to their own Drive file if we have write access
+      if (pl._shared) {
+        if (pl._shared.accessRole === 'writer' && pl._shared.dataFileId) {
+          const { _shared, ...plannerData } = pl;
+          try { await driveUpdateFile(pl._shared.dataFileId, plannerData); } catch(e) {
+            console.warn('Could not write shared planner', pl.id, e);
+          }
+        }
+        continue; // Don't add shared planners to owned index
+      }
+
+      // Owned planners
       let entry = drivePlannerMap[pl.id];
       if (entry) {
         await driveUpdateFile(entry.dataFileId, pl);
       } else {
-        // New planner — create its folder and file
         const newEntry = await driveCreatePlannerFiles(pl);
         drivePlannerMap[pl.id] = { folderId: newEntry.folderId, dataFileId: newEntry.dataFileId };
         entry = drivePlannerMap[pl.id];
@@ -3092,7 +3223,7 @@ async function driveSaveData() {
       indexEntries.push({ id: pl.id, name: pl.name, icon: pl.icon||'', ...entry });
     }
 
-    // Write index (reflects current planner list, handles deletions too)
+    // Write index (owned planners only — shared planners are not in our index)
     const indexData = { version: 2, planners: indexEntries };
     if (driveIndexFileId) {
       await driveUpdateFile(driveIndexFileId, indexData);
@@ -3231,21 +3362,228 @@ function updateDriveUI() {
 }
 
 function openDriveSettings() {
-  const { clientId } = getDriveConfig();
+  const { clientId, apiKey } = getDriveConfig();
   const el = document.getElementById('drive-client-id-input');
   if (el) el.value = clientId || '';
+  const ak = document.getElementById('drive-api-key-input');
+  if (ak) ak.value = apiKey || '';
   openModal('modal-drive-settings');
 }
 
 function saveDriveClientId() {
   const clientId = document.getElementById('drive-client-id-input')?.value.trim();
+  const apiKey   = document.getElementById('drive-api-key-input')?.value.trim();
   if (!clientId) return;
-  saveDriveConfig({ clientId });
+  saveDriveConfig({ clientId, apiKey: apiKey || '' });
   closeModal('modal-drive-settings');
-  // Re-initialise with new client ID if Google libs are ready
   if (driveGisReady && driveGapiReady) initGoogleDrive();
   else updateDriveUI();
 }
+
+// ── Phase 2b: Folder rename / trash ───
+async function driveRenamePlannerFolder(plannerId, name, icon) {
+  const entry = drivePlannerMap[plannerId];
+  if (!entry?.folderId || !driveTokenValid) return;
+  const folderName = `${name}${icon ? ' '+icon : ''}`;
+  try {
+    await gapi.client.drive.files.update({ fileId: entry.folderId, resource: { name: folderName } });
+  } catch(e) { console.warn('Drive rename folder failed', e); }
+}
+
+async function drivePlannerFolderTrash(plannerId) {
+  const entry = drivePlannerMap[plannerId];
+  if (!entry?.folderId) return;
+  try {
+    await gapi.client.drive.files.update({ fileId: entry.folderId, resource: { trashed: true } });
+  } catch(e) { console.warn('Drive trash folder failed', e); }
+  delete drivePlannerMap[plannerId];
+  saveDriveConfig({ plannerMap: drivePlannerMap });
+}
+
+// ── Phase 4a: Share modal ──────────────
+function openShareModal(plannerId) {
+  const folderId = drivePlannerMap[plannerId]?.folderId;
+  if (!folderId) { alert('Drive folder not found. Try saving the planner first.'); return; }
+  sharePlannerId = plannerId;
+  document.getElementById('share-email-input').value = '';
+  document.getElementById('share-collaborators-list').innerHTML =
+    '<div style="font-size:12.5px;color:var(--text-3);padding:4px 0">Loading…</div>';
+  openModal('modal-share');
+  loadCollaborators(folderId);
+}
+
+async function loadCollaborators(folderId) {
+  try {
+    const res = await gapi.client.drive.permissions.list({
+      fileId: folderId,
+      fields: 'permissions(id,emailAddress,displayName,role)',
+      pageSize: 50,
+    });
+    const perms = (res.result.permissions||[]).filter(p => p.role !== 'owner' && p.emailAddress);
+    renderCollaborators(perms, folderId);
+  } catch(e) {
+    document.getElementById('share-collaborators-list').innerHTML =
+      `<div style="font-size:12.5px;color:var(--amber-t);padding:4px 0">Could not load collaborators: ${e.result?.error?.message||'error'}</div>`;
+  }
+}
+
+function renderCollaborators(perms, folderId) {
+  const el = document.getElementById('share-collaborators-list');
+  if (!perms.length) {
+    el.innerHTML = '<div style="font-size:12.5px;color:var(--text-3);padding:4px 0">No collaborators yet — invite someone above.</div>';
+    return;
+  }
+  el.innerHTML = `<div class="share-collab-list">${perms.map(p => `
+    <div class="share-collab-item">
+      <div class="share-collab-info">
+        <div class="share-collab-name">${p.displayName||p.emailAddress}</div>
+        <div class="share-collab-email">${p.emailAddress}</div>
+      </div>
+      <div class="share-collab-role">${p.role === 'writer' ? 'Editor' : 'Viewer'}</div>
+      <button class="share-collab-revoke" onclick="revokeShare('${folderId}','${p.id}')">Remove</button>
+    </div>`).join('')}</div>`;
+}
+
+async function shareWithUser() {
+  const email = document.getElementById('share-email-input').value.trim();
+  if (!email) { document.getElementById('share-email-input').focus(); return; }
+  const role = document.getElementById('share-role-select').value;
+  const folderId = drivePlannerMap[sharePlannerId]?.folderId;
+  if (!folderId) return;
+  try {
+    await gapi.client.drive.permissions.create({
+      fileId: folderId,
+      sendNotificationEmail: true,
+      resource: { type: 'user', role, emailAddress: email },
+      fields: 'id',
+    });
+    document.getElementById('share-email-input').value = '';
+    loadCollaborators(folderId);
+  } catch(e) {
+    alert(`Could not share: ${e.result?.error?.message||e.message||'error'}`);
+  }
+}
+
+async function revokeShare(folderId, permId) {
+  if (!confirm('Remove this collaborator?')) return;
+  try {
+    await gapi.client.drive.permissions.delete({ fileId: folderId, permissionId: permId });
+    loadCollaborators(folderId);
+  } catch(e) {
+    alert(`Could not revoke: ${e.result?.error?.message||e.message||'error'}`);
+  }
+}
+
+// ── Phase 4b: Picker + shared planners ─
+let pickerLoaded = false;
+async function ensurePickerLoaded() {
+  if (pickerLoaded) return;
+  return new Promise(resolve => gapi.load('picker', () => { pickerLoaded = true; resolve(); }));
+}
+
+async function openSharedPlannerPicker() {
+  const { apiKey } = getDriveConfig();
+  if (!apiKey) {
+    alert('An API Key is required to open the folder picker.\nAdd it in Google Drive settings (click your account in the sidebar).');
+    return;
+  }
+  try {
+    await ensurePickerLoaded();
+    const token = gapi.client.getToken()?.access_token;
+    if (!token) { alert('Please sign in to Google Drive first.'); return; }
+    const view = new google.picker.DocsView()
+      .setMimeTypes('application/vnd.google-apps.folder')
+      .setSelectFolderEnabled(true)
+      .setMode(google.picker.DocsViewMode.LIST);
+    const picker = new google.picker.PickerBuilder()
+      .setOAuthToken(token)
+      .setDeveloperKey(apiKey)
+      .addView(view)
+      .setCallback(handlePickerResult)
+      .setTitle('Select a shared tudu planner folder')
+      .build();
+    picker.setVisible(true);
+  } catch(e) {
+    console.error('Picker error', e);
+    alert('Could not open folder picker: ' + (e.message||'unknown error'));
+  }
+}
+
+async function handlePickerResult(data) {
+  if (data.action !== google.picker.Action.PICKED) return;
+  const folder = data.docs?.[0];
+  if (!folder) return;
+  const folderId = folder.id;
+  setSyncStatus('saving');
+  try {
+    const plannerFileId = await driveFindFile(DRIVE_PLANNER_FILE, folderId);
+    if (!plannerFileId) {
+      alert('No planner.json found in the selected folder. Is this a tudu planner folder?');
+      setSyncStatus('off'); return;
+    }
+    const planner = JSON.parse(await driveReadFile(plannerFileId));
+    if (getData().planners.find(p => p.id === planner.id)) {
+      alert(`"${planner.name}" is already in your planners.`);
+      setSyncStatus('off'); return;
+    }
+    // Determine access role
+    let accessRole = 'reader';
+    try {
+      const res = await gapi.client.drive.permissions.list({
+        fileId: folderId, fields: 'permissions(emailAddress,role)', pageSize: 50,
+      });
+      const mine = (res.result.permissions||[]).find(p => p.emailAddress === driveUserInfo?.email);
+      if (mine) accessRole = mine.role;
+    } catch(e) {}
+    updateData(d => {
+      d.planners.push({ ...planner, _shared: { folderId, dataFileId: plannerFileId, accessRole, lastSynced: new Date().toISOString() } });
+    });
+    activePlannerId = planner.id;
+    renderSidebar(); showList();
+    setSyncStatus('saved');
+  } catch(e) {
+    console.error('Picker result error', e);
+    setSyncStatus('error');
+    alert('Could not load planner: ' + (e.message||'unknown error'));
+  }
+}
+
+// ── Phase 4c: Shared planner refresh ──
+async function refreshSharedPlanners() {
+  if (!driveTokenValid || !driveGapiReady) return;
+  const sharedPlanners = (getData().planners||[]).filter(pl => !!pl._shared);
+  if (!sharedPlanners.length) return;
+  let changed = false;
+  for (const pl of sharedPlanners) {
+    try {
+      const fresh = JSON.parse(await driveReadFile(pl._shared.dataFileId));
+      updateData(d => {
+        const idx = d.planners.findIndex(x => x.id === pl.id);
+        if (idx !== -1) {
+          d.planners[idx] = { ...fresh, _shared: { ...d.planners[idx]._shared, lastSynced: new Date().toISOString() } };
+          changed = true;
+        }
+      });
+    } catch(e) { console.warn('Could not refresh shared planner', pl.id, e); }
+  }
+  if (changed) {
+    renderSidebar();
+    if (activeProjectId) openProject(activeProjectId);
+    else if (activePlannerId && (getData().planners.find(pl=>pl.id===activePlannerId)?._shared)) showList();
+  }
+}
+
+function removeSharedPlanner(id) {
+  const pl = getData().planners.find(x=>x.id===id);
+  if (!confirm(`Remove "${pl?.name}" from your account? The original planner will not be affected.`)) return;
+  updateData(d => { d.planners = d.planners.filter(x=>x.id!==id); });
+  if (activePlannerId===id) activePlannerId=getData().planners[0]?.id||null;
+  renderSidebar(); showList();
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) refreshSharedPlanners();
+});
 
 // ══════════════════════════════════════
 // NAVIGATION (URL hash)
