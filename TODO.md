@@ -174,6 +174,12 @@ Events that span more than one day (hotels, car hire, cruises, etc.) need a gene
 - [ ] Markdown: single entry with date range
 - [ ] iCal (future): `DTSTART` / `DTEND` span
 
+### Map view — future enhancements
+- [ ] Route line connecting events in chronological order
+- [ ] Cluster overlapping markers when zoomed out
+- [ ] Filter by event type on the map
+- [ ] Span events (hotels) shown as a area/polygon on the map
+
 ### Timezones for flights
 - [ ] Flight events should have a start timezone and end timezone field (stored as IANA timezone string or UTC offset label, e.g. "Europe/London", "GMT+8")
 - [ ] Display-only: show timezone label next to the departure/arrival time in the itinerary row

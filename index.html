@@ -331,6 +331,12 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .itin-vbtn{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:6px;font-size:12.5px;font-weight:500;cursor:pointer;border:none;background:none;color:var(--text-3);font-family:inherit;transition:all .12s}
 .itin-vbtn:hover{color:var(--text-2)}
 .itin-vbtn.active{background:var(--surface);color:var(--text);box-shadow:var(--sh-sm)}
+/* ── Map view ── */
+.itin-event-location{font-size:11.5px;color:var(--text-3);margin-top:2px}
+.itin-map-outer{border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;height:calc(100vh - var(--th) - 230px);min-height:420px;position:relative;background:var(--surface-2)}
+.itin-map-el{width:100%;height:100%}
+.itin-map-status{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:13px;color:var(--text-2);pointer-events:none;padding:24px;text-align:center}
+.itin-map-legend{position:absolute;bottom:12px;left:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:6px 10px;font-size:11.5px;color:var(--text-2);display:flex;flex-wrap:wrap;gap:6px;max-width:360px;box-shadow:var(--sh-sm)}
 
 /* ── Calendar view ── */
 .itin-cal-wrap{border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;background:var(--surface)}
@@ -791,6 +797,10 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="2" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M1 5h11M4.5 1v2M8.5 1v2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
             Timeline
           </button>
+          <button class="itin-vbtn" id="ivbtn-map" onclick="setItinView('map')">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1C4.57 1 3 2.57 3 4.5c0 2.7 3.5 7.5 3.5 7.5S10 7.2 10 4.5C10 2.57 8.43 1 6.5 1z" stroke="currentColor" stroke-width="1.2"/><circle cx="6.5" cy="4.5" r="1.2" stroke="currentColor" stroke-width="1.1"/></svg>
+            Map
+          </button>
         </div>
       </div>
       <div id="live-banner"></div>
@@ -912,7 +922,11 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
     </div>
     <div class="form-field">
       <label>Details</label>
-      <textarea id="ev-details" rows="3" placeholder="Confirmation code, address, booking ref…" style="resize:vertical"></textarea>
+      <textarea id="ev-details" rows="3" placeholder="Confirmation code, booking ref…" style="resize:vertical"></textarea>
+    </div>
+    <div class="form-field">
+      <label>Location <span style="font-size:11px;font-weight:400;color:var(--text-3)">— plotted on the map view</span></label>
+      <input id="ev-location" placeholder="Address, hotel name, airport…">
     </div>
     <div class="form-field">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
@@ -2195,6 +2209,7 @@ function setItinView(view) {
   itinView = view;
   document.getElementById('ivbtn-list').classList.toggle('active', view==='list');
   document.getElementById('ivbtn-cal').classList.toggle('active', view==='calendar');
+  document.getElementById('ivbtn-map').classList.toggle('active', view==='map');
   const p = getActiveProject();
   if (p) renderItinerary(p);
 }
@@ -2245,6 +2260,11 @@ function renderItinerary(p) {
 
   if (itinView === 'calendar') {
     renderCalendarView(p, days, todayStr, phase);
+    return;
+  }
+
+  if (itinView === 'map') {
+    renderMapView(p, days);
     return;
   }
 
@@ -2583,6 +2603,7 @@ function renderEventRow(dayDate, ev) {
           ${ev.endDate ? `<span class="itin-span-end-tag">→ ${fmtDateShort(ev.endDate)}</span>` : ''}
         </div>
         ${ev.details ? `<div class="itin-event-details">${ev.details}</div>` : ''}
+        ${ev.location ? `<div class="itin-event-location">📍 ${ev.location}</div>` : ''}
         ${(() => { const lks=getEventLinks(ev); return lks.length ? `<div class="itin-event-links">${lks.map(l=>`<a class="itin-event-link-chip" href="${l.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 ${l.label||'Link'}</a>`).join('')}</div>` : ''; })()}
       </div>
       <div class="itin-event-actions" onclick="event.stopPropagation()">
@@ -2607,7 +2628,7 @@ function refreshItinDay(dateStr) {
   const days = getTripDays(p);
   const day = days.find(d => d.date === dateStr);
   const hasSpan = (day?.events||[]).some(ev => ev.endDate);
-  if (itinView === 'calendar' || hasSpan || dateStr === isoDate(today())) {
+  if (itinView === 'calendar' || itinView === 'map' || hasSpan || dateStr === isoDate(today())) {
     renderItinerary(p);
     return;
   }
@@ -2724,6 +2745,7 @@ function openAddEventModal(dayDate) {
   const _minEnd = new Date(addEventDay); _minEnd.setDate(_minEnd.getDate() + 1);
   document.getElementById('ev-enddate').min = isoDate(_minEnd);
   document.getElementById('ev-details').value = '';
+  document.getElementById('ev-location').value = '';
   modalLinks = []; renderModalLinks();
   document.getElementById('ev-delete-btn').style.display = 'none';
   document.getElementById('ev-day-field').style.display = 'none';
@@ -2752,6 +2774,7 @@ function openEditEventModal(dayDate, evId) {
   const _minEndE = new Date(dayDate); _minEndE.setDate(_minEndE.getDate() + 1);
   document.getElementById('ev-enddate').min = isoDate(_minEndE);
   document.getElementById('ev-details').value = ev.details||'';
+  document.getElementById('ev-location').value = ev.location||'';
   modalLinks = getEventLinks(ev).map(l => ({...l})); renderModalLinks();
   document.getElementById('ev-delete-btn').style.display = '';
   document.getElementById('ev-day-field').style.display = 'none';
@@ -2804,6 +2827,7 @@ function saveEvent() {
     endTime,
     ...(endDate ? {endDate} : {}),
     details: document.getElementById('ev-details').value.trim() || null,
+    location: document.getElementById('ev-location').value.trim() || null,
     links: links.length ? links : undefined,
     ...(linkedTaskId ? {linkedTaskId} : {}),
   };
@@ -4208,6 +4232,184 @@ function applyNavHash() {
 window.addEventListener('popstate', applyNavHash);
 
 // ══════════════════════════════════════
+// ══════════════════════════════════════
+// MAP VIEW
+// ══════════════════════════════════════
+
+// Geocode cache — persisted to localStorage across sessions
+const GEOCODE_CACHE_KEY = 'tudu_geocode_cache';
+const geocodeCache = (() => { try { return JSON.parse(localStorage.getItem(GEOCODE_CACHE_KEY)||'{}'); } catch{ return {}; } })();
+
+async function geocodeAddress(address) {
+  const key = address.trim().toLowerCase();
+  if (geocodeCache[key]) return geocodeCache[key];
+  const { apiKey } = getDriveConfig();
+  if (!apiKey) throw new Error('no-key');
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${encodeURIComponent(apiKey)}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  if (data.status !== 'OK' || !data.results[0]) throw new Error(data.status || 'GEOCODE_FAILED');
+  const loc = data.results[0].geometry.location; // { lat, lng }
+  geocodeCache[key] = loc;
+  try { localStorage.setItem(GEOCODE_CACHE_KEY, JSON.stringify(geocodeCache)); } catch{}
+  return loc;
+}
+
+// Google Maps JS API loader
+let _mapsApiState = 'idle'; // 'idle'|'loading'|'loaded'|'error'
+const _mapsApiWaiters = [];
+window._mapsReady = function() {
+  _mapsApiState = 'loaded';
+  _mapsApiWaiters.forEach(w => w.resolve());
+  _mapsApiWaiters.length = 0;
+};
+function loadMapsApi() {
+  if (_mapsApiState === 'loaded') return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    _mapsApiWaiters.push({ resolve, reject });
+    if (_mapsApiState !== 'idle') return; // already loading; just queue
+    const { apiKey } = getDriveConfig();
+    if (!apiKey) {
+      _mapsApiState = 'idle';
+      const err = new Error('no-key');
+      _mapsApiWaiters.forEach(w => w.reject(err));
+      _mapsApiWaiters.length = 0;
+      return;
+    }
+    _mapsApiState = 'loading';
+    const s = document.createElement('script');
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&callback=_mapsReady`;
+    s.onerror = () => {
+      _mapsApiState = 'error';
+      const err = new Error('Failed to load Google Maps API');
+      _mapsApiWaiters.forEach(w => w.reject(err));
+      _mapsApiWaiters.length = 0;
+    };
+    document.head.appendChild(s);
+  });
+}
+
+let _mapInstance = null;
+let _mapMarkers  = [];
+let _mapInfoWindow = null;
+
+async function renderMapView(p, days) {
+  const daysEl = document.getElementById('itinerary-days');
+  daysEl.innerHTML = `<div class="itin-map-outer">
+    <div id="itin-map-el" class="itin-map-el"></div>
+    <div class="itin-map-status" id="itin-map-status">
+      <span id="itin-map-status-text">Loading map…</span>
+    </div>
+  </div>`;
+
+  const statusText = () => document.getElementById('itin-map-status-text');
+  const hideStatus = () => { const s = document.getElementById('itin-map-status'); if (s) s.style.display = 'none'; };
+
+  const { apiKey } = getDriveConfig();
+  if (!apiKey) {
+    statusText().innerHTML = 'An <strong>API Key</strong> is needed to show the map.<br><small>Add it in Google Drive settings (click your account in the sidebar) and enable the Maps JavaScript API &amp; Geocoding API in Google Cloud Console.</small>';
+    return;
+  }
+
+  // Collect events with locations across all days (including span end rows)
+  const eventsWithLoc = [];
+  for (const day of days) {
+    for (const ev of (day.events||[])) {
+      if (ev.location?.trim()) eventsWithLoc.push({ dateStr: day.date, ev });
+    }
+  }
+  if (!eventsWithLoc.length) {
+    statusText().textContent = 'No event locations yet — add a Location to events to see them here.';
+    return;
+  }
+
+  try {
+    statusText().textContent = 'Loading map…';
+    await loadMapsApi();
+  } catch(e) {
+    statusText().textContent = 'Could not load Google Maps' + (e.message === 'no-key' ? ' — API key missing.' : ': ' + e.message);
+    return;
+  }
+
+  // Destroy previous map markers
+  _mapMarkers.forEach(m => m.setMap(null));
+  _mapMarkers = [];
+  if (_mapInfoWindow) _mapInfoWindow.close();
+
+  const mapEl = document.getElementById('itin-map-el');
+  if (!mapEl) return;
+
+  const c = COLORS[p.color] || COLORS.indigo;
+  _mapInstance = new google.maps.Map(mapEl, {
+    zoom: 4,
+    center: { lat: 48, lng: 8 },
+    mapTypeControl: false,
+    streetViewControl: false,
+    fullscreenControl: true,
+    gestureHandling: 'cooperative',
+  });
+  _mapInfoWindow = new google.maps.InfoWindow();
+
+  statusText().textContent = `Geocoding ${eventsWithLoc.length} location${eventsWithLoc.length>1?'s':''}…`;
+
+  const bounds = new google.maps.LatLngBounds();
+  let placed = 0;
+
+  // Pin SVG using project colour
+  function pinSvg(hex) {
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="30" viewBox="0 0 22 30">` +
+      `<path d="M11 0C4.93 0 0 4.93 0 11c0 7.7 11 19 11 19s11-11.3 11-19C22 4.93 17.07 0 11 0z" fill="${hex}" stroke="white" stroke-width="1.5"/>` +
+      `<circle cx="11" cy="11" r="4" fill="white" fill-opacity="0.7"/>` +
+      `</svg>`
+    )}`;
+  }
+
+  await Promise.all(eventsWithLoc.map(async ({ dateStr, ev }) => {
+    try {
+      const pos = await geocodeAddress(ev.location);
+      const et = EVENT_TYPES[ev.type] || EVENT_TYPES.note;
+      const marker = new google.maps.Marker({
+        position: pos,
+        map: _mapInstance,
+        title: ev.title,
+        icon: { url: pinSvg(c.hex), scaledSize: new google.maps.Size(22, 30), anchor: new google.maps.Point(11, 30) },
+      });
+      bounds.extend(pos);
+      placed++;
+      marker.addListener('click', () => {
+        const lks = getEventLinks(ev);
+        _mapInfoWindow.setContent(
+          `<div style="font-size:13px;font-family:system-ui,sans-serif;max-width:230px;line-height:1.4">` +
+          `<div style="font-weight:600;margin-bottom:3px">${et.icon} ${ev.title}</div>` +
+          `<div style="color:#666;font-size:11.5px;margin-bottom:3px">${fmtDateFull(dateStr)}${ev.time ? ' · '+fmtTime(ev.time) : ''}</div>` +
+          `<div style="color:#888;font-size:11.5px;margin-bottom:6px">📍 ${ev.location}</div>` +
+          (lks.length ? `<a href="${lks[0].url}" target="_blank" rel="noopener" style="font-size:12px;color:#1a73e8;display:block;margin-bottom:6px">${lks[0].label||'Open link'} ↗</a>` : '') +
+          `<button onclick="setItinView('list');setTimeout(()=>openEditEventModal('${dateStr}','${ev.id}'),50)" ` +
+          `style="font-size:12px;padding:3px 9px;border:1px solid #ccc;border-radius:4px;background:#fff;cursor:pointer;font-family:inherit">Edit event</button>` +
+          `</div>`
+        );
+        _mapInfoWindow.open(_mapInstance, marker);
+      });
+      _mapMarkers.push(marker);
+    } catch(e) {
+      console.warn('Could not geocode:', ev.location, e.message);
+    }
+  }));
+
+  if (placed === 0) {
+    statusText().textContent = 'Could not geocode any locations (check your API key has Geocoding API enabled).';
+    return;
+  }
+  hideStatus();
+  if (placed === 1) {
+    _mapInstance.setCenter(bounds.getCenter());
+    _mapInstance.setZoom(13);
+  } else {
+    _mapInstance.fitBounds(bounds, { top: 40, right: 40, bottom: 40, left: 40 });
+  }
+}
+
 // ── Event modal file upload ─────────────
 function triggerEvFileUpload() {
   if (!driveTokenValid) { alert('Connect Google Drive to upload files.'); return; }
