@@ -127,6 +127,84 @@ Link {
 
 ---
 
+## URL Navigation
+
+Hash-based routing preserves position across refresh and produces shareable links.
+
+```
+#/p/{plannerId}                    list view for a specific planner
+#/p/{plannerId}/proj/{projectId}   project detail (planning tab)
+#/p/{plannerId}/proj/{projectId}/itinerary   project detail (itinerary tab)
+```
+
+Key functions:
+```js
+buildNavHash()    // derives hash string from current activePlannerId / activeProjectId / currentDetailTab
+pushNavHash()     // history.pushState — used by showList() and openProject() (back button works)
+replaceNavHash()  // history.replaceState — used by switchDetailTab() (tab flips don't pollute history)
+applyNavHash()    // parses location.hash and calls showList() or openProject(); called from init()
+                  // and on window 'popstate' event
+```
+
+`init()` calls `applyNavHash()` instead of `showList()` directly, so Drive data reloads
+(which re-call `init()`) also restore the last position.
+
+---
+
+## Google Drive
+
+### File layout in Drive
+```
+My Drive/
+  tudu/
+    index.json           ← { version:2, planners:[{id, name, icon, folderId, dataFileId}] }
+    {Planner Name} {🎒}/ ← Drive folder — share to grant planner-level access
+      planner.json       ← full Planner object (all projects, tasks, events)
+```
+
+### Drive state variables
+| Variable | Purpose |
+|---|---|
+| `driveGisReady` / `driveGapiReady` | script load flags; `maybeDriveInit()` fires when both true |
+| `driveTokenValid` | whether a live OAuth token is held |
+| `driveRootFolderId` | ID of the `tudu/` root folder |
+| `driveIndexFileId` | ID of `index.json` |
+| `drivePlannerMap` | `{ [plannerId]: { folderId, dataFileId } }` — avoids repeated Drive searches |
+| `driveUserInfo` | `{ name, email, picture }` from Google userinfo endpoint |
+| `driveTokenClient` | GIS `TokenClient` instance |
+| `driveSyncTimer` | debounce handle for 800 ms write delay |
+
+### Load flow
+```
+sign-in → handleDriveTokenResponse
+  → driveLoadData()
+    → get/create tudu/ root folder
+    → look for index.json
+      ├── found (v2): driveReadAllPlanners() → load each planner.json → localStorage → init()
+      └── not found:
+           ├── v1 tudu-data.json exists → set as localStorage, driveInitialPush(), rename v1 as backup
+           └── first time → driveInitialPush() (push local data to Drive)
+```
+
+### Save flow
+```
+updateData(fn)
+  → localStorage write
+  → scheduleDriveSync()   (800 ms debounce)
+    → driveSaveData()
+      → for each planner: update planner.json (create folder+file if new planner)
+      → update index.json
+```
+
+### Sharing (Phase 4 — not yet implemented)
+See TODO.md "Sharing Design" section. Key points:
+- Stays within `drive.file` scope — no security assessment needed
+- Google Picker "opens" the shared folder, granting access
+- `SharedRef[]` added to Root; shared planners rendered in a separate sidebar section
+- Viewer/editor role read from `drive.permissions.list` on load
+
+---
+
 ## Store Abstraction
 
 ```js

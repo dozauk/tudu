@@ -1091,13 +1091,14 @@ function selectPlanner(id) { activePlannerId = id; renderSidebar(); showList(); 
 // LIST VIEW
 // ══════════════════════════════════════
 function showList() {
+  activeProjectId = null;
+  pushNavHash();
   document.getElementById('view-list').style.display = 'block';
   document.getElementById('view-detail').style.display = 'none';
   document.getElementById('bc-sep').style.display = 'none';
   document.getElementById('bc-current').style.display = 'none';
   document.getElementById('topbar-new-btn').style.display = '';
   document.getElementById('topbar-export-md-btn').style.display = 'none';
-  activeProjectId = null;
 
   const pl = getActivePlanner();
   if (!pl) {
@@ -1362,6 +1363,7 @@ function openProject(pid) {
   const p = (pl?.projects||[]).find(x=>x.id===pid);
   if (!p) return;
   activeProjectId = pid;
+  pushNavHash();
 
   document.getElementById('view-list').style.display = 'none';
   document.getElementById('view-detail').style.display = 'block';
@@ -1390,6 +1392,7 @@ function openProject(pid) {
 // ══════════════════════════════════════
 function switchDetailTab(tab) {
   currentDetailTab = tab;
+  replaceNavHash(); // tab switches replace rather than push — don't want back button cycling through tabs
   document.querySelectorAll('.detail-tab').forEach(t => t.classList.toggle('active', t.dataset.tab===tab));
   document.getElementById('detail-planning').style.display  = tab==='planning'  ? '' : 'none';
   document.getElementById('detail-itinerary').style.display = tab==='itinerary' ? '' : 'none';
@@ -2886,7 +2889,7 @@ document.addEventListener('keydown', e => {
 // GOOGLE DRIVE
 // ══════════════════════════════════════
 
-// Config stored separately in localStorage so it survives data resets
+// Config stored separately so it survives data resets
 const DRIVE_CONFIG_KEY = 'tudu_drive_config';
 function getDriveConfig() {
   try { return JSON.parse(localStorage.getItem(DRIVE_CONFIG_KEY)||'{}'); } catch(e) { return {}; }
@@ -2900,13 +2903,15 @@ let driveGisReady = false;
 let driveGapiReady = false;
 let driveTokenValid = false;
 let driveRootFolderId = null;
-let driveDataFileId = null;
+let driveIndexFileId = null;
+let drivePlannerMap = {};   // { [plannerId]: { folderId, dataFileId } }
 let driveSyncTimer = null;
 let driveUserInfo = null;
 let driveTokenClient = null;
 
 const DRIVE_FOLDER_NAME = 'tudu';
-const DRIVE_DATA_FILE = 'tudu-data.json';
+const DRIVE_INDEX_FILE  = 'index.json';
+const DRIVE_PLANNER_FILE = 'planner.json';
 const DRIVE_SCOPES = [
   'https://www.googleapis.com/auth/drive.file',
   'https://www.googleapis.com/auth/userinfo.profile',
@@ -2993,36 +2998,74 @@ function signOutDrive() {
 
 // ── Data load / save ───────────────────
 async function driveLoadData() {
-  setSyncStatus('saving'); // reuse spinner while loading
+  setSyncStatus('saving');
   try {
-    // Find or create root folder
-    if (!driveRootFolderId) {
-      driveRootFolderId = await driveGetOrCreateFolder(DRIVE_FOLDER_NAME, 'root');
-      saveDriveConfig({ rootFolderId: driveRootFolderId });
-    }
+    const cfg = getDriveConfig();
+    driveRootFolderId = cfg.rootFolderId || await driveGetOrCreateFolder(DRIVE_FOLDER_NAME, 'root');
+    saveDriveConfig({ rootFolderId: driveRootFolderId });
 
-    // Find data file
-    if (!driveDataFileId) {
-      driveDataFileId = await driveFindFile(DRIVE_DATA_FILE, driveRootFolderId);
-      if (driveDataFileId) saveDriveConfig({ dataFileId: driveDataFileId });
-    }
+    // Look for v2 index.json
+    driveIndexFileId = cfg.indexFileId || await driveFindFile(DRIVE_INDEX_FILE, driveRootFolderId);
 
-    if (driveDataFileId) {
-      // Load from Drive — Drive is source of truth when signed in
-      const content = await driveReadFile(driveDataFileId);
-      const incoming = JSON.parse(content);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(incoming));
-      init(); // re-render with Drive data
+    if (!driveIndexFileId) {
+      // Check for v1 single-file format and migrate, or push local data fresh
+      const v1FileId = await driveFindFile('tudu-data.json', driveRootFolderId);
+      if (v1FileId) {
+        const content = await driveReadFile(v1FileId);
+        localStorage.setItem(STORAGE_KEY, content); // v1 data is source of truth
+        await driveInitialPush();
+        // Rename v1 file as backup
+        try { await gapi.client.drive.files.update({ fileId: v1FileId, resource: { name: 'tudu-data-v1-backup.json' } }); } catch(e) {}
+      } else {
+        await driveInitialPush();
+      }
     } else {
-      // First time: push current local data to Drive
-      driveDataFileId = await driveCreateJsonFile(DRIVE_DATA_FILE, getData(), driveRootFolderId);
-      saveDriveConfig({ dataFileId: driveDataFileId });
+      saveDriveConfig({ indexFileId: driveIndexFileId });
+      await driveReadAllPlanners();
     }
     setSyncStatus('saved');
   } catch(e) {
     console.error('Drive load error', e);
     setSyncStatus('error');
   }
+}
+
+async function driveInitialPush() {
+  // First-ever sync: create folder structure from local data
+  drivePlannerMap = {};
+  const data = getData();
+  const indexEntries = [];
+  for (const pl of data.planners || []) {
+    const entry = await driveCreatePlannerFiles(pl);
+    drivePlannerMap[pl.id] = { folderId: entry.folderId, dataFileId: entry.dataFileId };
+    indexEntries.push(entry);
+  }
+  driveIndexFileId = await driveCreateJsonFile(DRIVE_INDEX_FILE, { version: 2, planners: indexEntries }, driveRootFolderId);
+  saveDriveConfig({ indexFileId: driveIndexFileId, plannerMap: drivePlannerMap });
+}
+
+async function driveCreatePlannerFiles(planner) {
+  const folderName = `${planner.name}${planner.icon ? ' '+planner.icon : ''}`;
+  const folderId = await driveGetOrCreateFolder(folderName, driveRootFolderId);
+  const dataFileId = await driveCreateJsonFile(DRIVE_PLANNER_FILE, planner, folderId);
+  return { id: planner.id, name: planner.name, icon: planner.icon||'', folderId, dataFileId };
+}
+
+async function driveReadAllPlanners() {
+  const indexContent = await driveReadFile(driveIndexFileId);
+  const index = JSON.parse(indexContent);
+  drivePlannerMap = {};
+  const planners = [];
+  for (const entry of index.planners || []) {
+    drivePlannerMap[entry.id] = { folderId: entry.folderId, dataFileId: entry.dataFileId };
+    try {
+      planners.push(JSON.parse(await driveReadFile(entry.dataFileId)));
+    } catch(e) { console.warn('Could not load planner', entry.id, e); }
+  }
+  saveDriveConfig({ plannerMap: drivePlannerMap });
+  const existing = getData();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...existing, planners }));
+  init(); // re-render with Drive data
 }
 
 async function driveSaveData() {
@@ -3033,12 +3076,31 @@ async function driveSaveData() {
       driveRootFolderId = await driveGetOrCreateFolder(DRIVE_FOLDER_NAME, 'root');
       saveDriveConfig({ rootFolderId: driveRootFolderId });
     }
-    if (driveDataFileId) {
-      await driveUpdateFile(driveDataFileId, getData());
-    } else {
-      driveDataFileId = await driveCreateJsonFile(DRIVE_DATA_FILE, getData(), driveRootFolderId);
-      saveDriveConfig({ dataFileId: driveDataFileId });
+    const data = getData();
+    const indexEntries = [];
+
+    for (const pl of data.planners || []) {
+      let entry = drivePlannerMap[pl.id];
+      if (entry) {
+        await driveUpdateFile(entry.dataFileId, pl);
+      } else {
+        // New planner — create its folder and file
+        const newEntry = await driveCreatePlannerFiles(pl);
+        drivePlannerMap[pl.id] = { folderId: newEntry.folderId, dataFileId: newEntry.dataFileId };
+        entry = drivePlannerMap[pl.id];
+      }
+      indexEntries.push({ id: pl.id, name: pl.name, icon: pl.icon||'', ...entry });
     }
+
+    // Write index (reflects current planner list, handles deletions too)
+    const indexData = { version: 2, planners: indexEntries };
+    if (driveIndexFileId) {
+      await driveUpdateFile(driveIndexFileId, indexData);
+    } else {
+      driveIndexFileId = await driveCreateJsonFile(DRIVE_INDEX_FILE, indexData, driveRootFolderId);
+      saveDriveConfig({ indexFileId: driveIndexFileId });
+    }
+    saveDriveConfig({ plannerMap: drivePlannerMap });
     setSyncStatus('saved');
   } catch(e) {
     console.error('Drive save error', e);
@@ -3186,14 +3248,60 @@ function saveDriveClientId() {
 }
 
 // ══════════════════════════════════════
+// NAVIGATION (URL hash)
+// ══════════════════════════════════════
+// Hash format: #/p/{plannerId}  or  #/p/{plannerId}/proj/{projectId}  or  .../itinerary
+// replaceState keeps address bar current without polluting browser history on every keystroke.
+// A deliberate navigation (click planner, open project) uses pushState so back/forward work.
+
+function buildNavHash() {
+  const parts = [''];
+  if (activePlannerId) {
+    parts.push('p', activePlannerId);
+    if (activeProjectId) {
+      parts.push('proj', activeProjectId);
+      if (currentDetailTab === 'itinerary') parts.push('itinerary');
+    }
+  }
+  return '#' + parts.join('/');
+}
+
+function pushNavHash()    { history.pushState(null, '', buildNavHash()); }
+function replaceNavHash() { history.replaceState(null, '', buildNavHash()); }
+
+function applyNavHash() {
+  const raw = location.hash.replace(/^#\/?/, '');
+  if (!raw) { showList(); return; }
+  const segs = raw.split('/');
+  const pIdx   = segs.indexOf('p');
+  const projIdx = segs.indexOf('proj');
+
+  if (pIdx !== -1 && segs[pIdx + 1]) {
+    const pid = segs[pIdx + 1];
+    const d = getData();
+    if (d.planners.find(pl => pl.id === pid)) activePlannerId = pid;
+  }
+
+  if (projIdx !== -1 && segs[projIdx + 1]) {
+    if (segs[projIdx + 2] === 'itinerary') currentDetailTab = 'itinerary';
+    openProject(segs[projIdx + 1]);
+  } else {
+    showList();
+  }
+}
+
+window.addEventListener('popstate', applyNavHash);
+
+// ══════════════════════════════════════
 // INIT
 // ══════════════════════════════════════
 function init() {
   buildIconPicker('np-icon-picker', PLANNER_ICONS[0]);
   const d = getData();
   activePlannerId = d.planners[0]?.id||null;
-  renderSidebar(); showList();
+  renderSidebar();
   updateDriveUI();
+  applyNavHash(); // restore position from URL, or default to list view
 }
 init();
 </script>
