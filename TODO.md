@@ -174,6 +174,12 @@ Events that span more than one day (hotels, car hire, cruises, etc.) need a gene
 - [ ] Markdown: single entry with date range
 - [ ] iCal (future): `DTSTART` / `DTEND` span
 
+### Timezones for flights
+- [ ] Flight events should have a start timezone and end timezone field (stored as IANA timezone string or UTC offset label, e.g. "Europe/London", "GMT+8")
+- [ ] Display-only: show timezone label next to the departure/arrival time in the itinerary row
+- [ ] No grid conversion needed — times remain local to the trip day; timezone is informational
+- [ ] Event modal: show timezone selectors only when type is `flight`
+
 ## General
 - [ ] Responsive mobile UI
 - [ ] Offline support / PWA
