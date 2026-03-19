@@ -2242,9 +2242,6 @@ function renderItinerary(p) {
     const evCount = events.length;
     const potentialTasks = getPotentialSlotsForDay(p, day.date);
     const spanEvents = getSpanEventsForDay(days, day.date);
-    // Span start events replace the actual event row (avoid duplicate display)
-    const spanStartIds = new Set(spanEvents.filter(s => s.role === 'start').map(s => s.ev.id));
-    const regularEvents = events.filter(ev => !spanStartIds.has(ev.id));
     // All-day banners (start + intermediate)
     const spanBannersHtml = spanEvents.filter(s => s.role !== 'end')
       .map(({ev, startDate, role}) => renderSpanBanner(day.date, ev, startDate, role)).join('');
@@ -2252,7 +2249,7 @@ function renderItinerary(p) {
     const spanEndItems = spanEvents.filter(s => s.role === 'end')
       .map(({ev, startDate}) => ({ sortKey: ev.endTime||'99:99', html: renderSpanEndRow(day.date, ev, startDate) }));
     const allTimedItems = [
-      ...regularEvents.map(ev => ({ sortKey: ev.time||'99:99', html: renderEventRow(day.date, ev) })),
+      ...events.map(ev => ({ sortKey: ev.time||'99:99', html: renderEventRow(day.date, ev) })),
       ...spanEndItems
     ].sort((a,b) => a.sortKey.localeCompare(b.sortKey));
     const timedHtml = allTimedItems.map(x => x.html).join('');
@@ -2377,7 +2374,7 @@ function renderCalendarView(p, days, todayStr, phase) {
       while (slots[slot] !== undefined && slots[slot] > y + 4) slot++;
       slots[slot] = endY;
       const et = EVENT_TYPES[ev.type] || EVENT_TYPES.note;
-      const timeLabel = ev.endTime ? `${fmtTime(ev.time)} – ${fmtTime(ev.endTime)}` : fmtTime(ev.time);
+      const timeLabel = (ev.endTime && !ev.endDate) ? `${fmtTime(ev.time)} – ${fmtTime(ev.endTime)}` : fmtTime(ev.time);
       return `<div class="itin-cal-event-block"
         style="top:${y.toFixed(1)}px;height:${h.toFixed(1)}px;left:${4 + slot*4}px;right:4px;background:${c.hex};color:#fff"
         onclick="event.stopPropagation();openEditEventModal('${day.date}','${ev.id}')"
@@ -2512,14 +2509,7 @@ function renderSpanBanner(targetDate, ev, startDate, role) {
     : Math.round((dateOnly(targetDate) - dateOnly(startDate)) / 86400000) + 1;
   const periodLabel = ev.type === 'hotel' ? `night ${periodNum} of ${total}`
                     : `day ${periodNum} of ${total}`;
-  let text;
-  if (role === 'start') {
-    const actionLabel = ev.type === 'hotel' ? 'Check-in' : ev.type === 'car' ? 'Pick-up' : null;
-    const timeStr = ev.time ? ` · ${fmtTime(ev.time)}` : '';
-    text = `<strong>${ev.title}</strong>${actionLabel ? ` · ${actionLabel}${timeStr}` : timeStr} <span class="itin-span-night">· ${periodLabel}</span>`;
-  } else {
-    text = `<strong>${ev.title}</strong> <span class="itin-span-night">· ${periodLabel}</span>`;
-  }
+  const text = `<strong>${ev.title}</strong> <span class="itin-span-night">· ${periodLabel}</span>`;
   return `<div class="itin-span-banner" style="border-left-color:${c.hex}" onclick="openEditEventModal('${startDate}','${ev.id}')">
     <span class="itin-span-banner-icon">${et.icon}</span>
     <span class="itin-span-banner-text">${text}</span>
@@ -2595,14 +2585,12 @@ function refreshItinDay(dateStr) {
   const events = [...(day?.events||[])].sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
   const potentialTasks = getPotentialSlotsForDay(p, dateStr);
   const spanEvents = getSpanEventsForDay(days, dateStr);
-  const spanStartIds = new Set(spanEvents.filter(s => s.role === 'start').map(s => s.ev.id));
-  const regularEvents = events.filter(ev => !spanStartIds.has(ev.id));
   const spanBannersHtml = spanEvents.filter(s => s.role !== 'end')
     .map(({ev, startDate, role}) => renderSpanBanner(dateStr, ev, startDate, role)).join('');
   const spanEndItems = spanEvents.filter(s => s.role === 'end')
     .map(({ev, startDate}) => ({ sortKey: ev.endTime||'99:99', html: renderSpanEndRow(dateStr, ev, startDate) }));
   const allTimedItems = [
-    ...regularEvents.map(ev => ({ sortKey: ev.time||'99:99', html: renderEventRow(dateStr, ev) })),
+    ...events.map(ev => ({ sortKey: ev.time||'99:99', html: renderEventRow(dateStr, ev) })),
     ...spanEndItems
   ].sort((a,b) => a.sortKey.localeCompare(b.sortKey));
   const eventsEl = document.getElementById(`itin-events-${dateStr}`);
