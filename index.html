@@ -483,6 +483,12 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .itin-potential-row:hover{opacity:1}
 .itin-potential-icon{font-size:15px;flex-shrink:0}
 .itin-potential-text{font-size:13px;color:var(--text-2);flex:1}
+.itin-span-banner{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--r-sm);margin-bottom:4px;font-size:13px;cursor:pointer;transition:background .12s}
+.itin-span-banner:hover{background:var(--surface-2)}
+.itin-span-banner-icon{font-size:15px;flex-shrink:0}
+.itin-span-banner-text{flex:1;color:var(--text-2)}
+.itin-span-night{color:var(--text-3);font-size:12px}
+.itin-span-end-tag{display:inline-block;font-size:11px;color:var(--text-3);background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:1px 5px;margin-left:6px;vertical-align:middle}
 .itin-potential-note{font-size:11.5px;color:var(--text-3)}
 .td-event-link{font-size:12px;color:var(--accent-text);cursor:pointer;font-weight:500;padding:4px 8px;background:var(--accent-lite);border-radius:var(--r-sm);display:inline-flex;align-items:center;gap:5px}
 .td-event-link:hover{text-decoration:underline}
@@ -610,7 +616,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding-top:4px">
       <a href="privacy.html" target="_blank" style="font-size:11px;color:var(--text-3);text-decoration:none" onmouseover="this.style.color='var(--accent-text)'" onmouseout="this.style.color='var(--text-3)'">Privacy policy</a>
-      <span style="font-size:11px;color:var(--text-3)">v0.4.1</span>
+      <span style="font-size:11px;color:var(--text-3)">v0.5.0</span>
     </div>
   </div>
 </nav>
@@ -881,13 +887,17 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
         <input id="ev-title" placeholder="e.g. Flight LHR → FCO">
       </div>
       <div class="form-field" style="margin-bottom:0">
-        <label>Start time</label>
+        <label id="ev-time-label">Start time</label>
         <input type="time" id="ev-time" style="width:110px" oninput="onEvTimeChange()">
       </div>
       <div class="form-field" id="ev-endtime-field" style="margin-bottom:0;display:none">
-        <label>End time</label>
+        <label id="ev-endtime-label">End time</label>
         <input type="time" id="ev-endtime" style="width:110px">
       </div>
+    </div>
+    <div class="form-field" id="ev-enddate-field" style="display:none;margin-bottom:14px">
+      <label id="ev-enddate-label">End date</label>
+      <input type="date" id="ev-enddate" style="width:160px">
     </div>
     <div class="form-field">
       <label>Details</label>
@@ -2231,6 +2241,8 @@ function renderItinerary(p) {
     const events  = [...(day.events||[])].sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
     const evCount = events.length;
     const potentialTasks = getPotentialSlotsForDay(p, day.date);
+    const spanEvents = getSpanEventsForDay(days, day.date);
+    const spanHtml = spanEvents.map(({ev, startDate, isEnd}) => renderSpanBanner(day.date, ev, startDate, isEnd)).join('');
 
     const potentialHtml = potentialTasks.map(t =>
       `<div class="itin-potential-row" onclick="switchDetailTab('planning')" title="Go to task: ${t.text}">
@@ -2253,8 +2265,8 @@ function renderItinerary(p) {
         </div>
         <div class="itin-day-body ${(isToday||!isPast)?'open':''}" id="itin-body-${day.date}">
           <div class="itin-events" id="itin-events-${day.date}">
-            ${events.length ? events.map(ev => renderEventRow(day.date, ev)).join('')
-              : !potentialTasks.length ? `<div class="itin-empty">No events — add one below</div>` : ''}
+            ${spanHtml}${events.length ? events.map(ev => renderEventRow(day.date, ev)).join('')
+              : !potentialTasks.length && !spanEvents.length ? `<div class="itin-empty">No events — add one below</div>` : ''}
           </div>
           ${potentialHtml}
           <div class="itin-add-row">
@@ -2362,9 +2374,22 @@ function renderCalendarView(p, days, todayStr, phase) {
       </div>`;
     }).join('');
 
+    // Span events (multi-day) virtualised for this day
+    const spanEventsForDay = getSpanEventsForDay(days, day.date);
+    const spanCalHtml = spanEventsForDay.map(({ ev, startDate, isEnd }) => {
+      const et2 = EVENT_TYPES[ev.type] || EVENT_TYPES.note;
+      const label = isEnd
+        ? (ev.type === 'hotel' ? `Check-out: ${ev.title}` : ev.type === 'car' ? `Drop-off: ${ev.title}` : `End: ${ev.title}`)
+        : ev.title;
+      return `<div class="itin-cal-untimed-ev"
+        style="background:${c.hex}33;border-left:3px solid ${c.hex};font-style:${isEnd?'normal':'italic'}"
+        onclick="event.stopPropagation();openEditEventModal('${startDate}','${ev.id}')"
+        title="${ev.title}">${et2.icon} ${label}</div>`;
+    }).join('');
+
     // Untimed events strip above grid
-    const untimedHtml = untimed.length
-      ? `<div class="itin-cal-untimed">${untimed.map(ev => {
+    const untimedHtml = (untimed.length || spanEventsForDay.length)
+      ? `<div class="itin-cal-untimed">${spanCalHtml}${untimed.map(ev => {
           const et = EVENT_TYPES[ev.type] || EVENT_TYPES.note;
           return `<div class="itin-cal-untimed-ev"
             style="background:${c.hex}22;border-left:3px solid ${c.hex}"
@@ -2414,6 +2439,43 @@ function renderCalendarView(p, days, todayStr, phase) {
   }
 }
 
+// Returns span events from other days that cover targetDate
+// Each result: { ev, startDate, isEnd }
+function getSpanEventsForDay(allDays, targetDate) {
+  const result = [];
+  for (const day of allDays) {
+    if (day.date >= targetDate) continue; // only events that started before target
+    for (const ev of (day.events || [])) {
+      if (!ev.endDate || ev.endDate < targetDate) continue;
+      result.push({ ev, startDate: day.date, isEnd: ev.endDate === targetDate });
+    }
+  }
+  return result;
+}
+
+function renderSpanBanner(targetDate, ev, startDate, isEnd) {
+  const et = EVENT_TYPES[ev.type] || EVENT_TYPES.note;
+  const p = getActiveProject();
+  const c = p ? (COLORS[p.color] || COLORS.indigo) : COLORS.indigo;
+  const totalNights = Math.round((dateOnly(ev.endDate) - dateOnly(startDate)) / 86400000);
+  const nightNum    = Math.round((dateOnly(targetDate)  - dateOnly(startDate)) / 86400000);
+  let label;
+  if (isEnd) {
+    label = ev.type === 'hotel' ? `Check-out: <strong>${ev.title}</strong>`
+          : ev.type === 'car'   ? `Drop-off: <strong>${ev.title}</strong>`
+          :                        `End: <strong>${ev.title}</strong>`;
+  } else {
+    const countLabel = ev.type === 'hotel' ? `night ${nightNum} of ${totalNights}`
+                     : ev.type === 'car'   ? `day ${nightNum} of ${totalNights}`
+                     :                       `day ${nightNum + 1}`;
+    label = `<strong>${ev.title}</strong> <span class="itin-span-night">· ${countLabel}</span>`;
+  }
+  return `<div class="itin-span-banner" style="border-left-color:${c.hex}" onclick="openEditEventModal('${startDate}','${ev.id}')">
+    <span class="itin-span-banner-icon">${et.icon}</span>
+    <span class="itin-span-banner-text">${label}</span>
+  </div>`;
+}
+
 function renderEventRow(dayDate, ev) {
   const et = EVENT_TYPES[ev.type]||EVENT_TYPES.note;
   const p = getActiveProject();
@@ -2426,6 +2488,7 @@ function renderEventRow(dayDate, ev) {
         <div class="itin-event-header">
           ${ev.time ? `<span class="itin-event-time">${fmtTime(ev.time)}${ev.endTime ? ' – '+fmtTime(ev.endTime) : ''}</span>` : ''}
           <span class="itin-event-title">${ev.title}</span>
+          ${ev.endDate ? `<span class="itin-span-end-tag">→ ${fmtDateShort(ev.endDate)}</span>` : ''}
         </div>
         ${ev.details ? `<div class="itin-event-details">${ev.details}</div>` : ''}
         ${(() => { const lks=getEventLinks(ev); return lks.length ? `<div class="itin-event-links">${lks.map(l=>`<a class="itin-event-link-chip" href="${l.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 ${l.label||'Link'}</a>`).join('')}</div>` : ''; })()}
@@ -2455,10 +2518,12 @@ function refreshItinDay(dateStr) {
   const day = days.find(d => d.date === dateStr); if (!day) return;
   const events = [...(day.events||[])].sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
   const potentialTasks = getPotentialSlotsForDay(p, dateStr);
+  const spanEvents = getSpanEventsForDay(days, dateStr);
+  const spanHtml = spanEvents.map(({ev, startDate, isEnd}) => renderSpanBanner(dateStr, ev, startDate, isEnd)).join('');
   const eventsEl = document.getElementById(`itin-events-${dateStr}`);
   if (eventsEl) {
-    eventsEl.innerHTML = events.length ? events.map(ev => renderEventRow(dateStr, ev)).join('')
-      : !potentialTasks.length ? `<div class="itin-empty">No events — add one below</div>` : '';
+    eventsEl.innerHTML = spanHtml + (events.length ? events.map(ev => renderEventRow(dateStr, ev)).join('')
+      : !potentialTasks.length && !spanEvents.length ? `<div class="itin-empty">No events — add one below</div>` : '');
   }
   const dayEl = document.getElementById(`itin-day-${dateStr}`);
   if (dayEl) {
@@ -2466,6 +2531,25 @@ function refreshItinDay(dateStr) {
     if (countEl) countEl.textContent = events.length ? events.length+' event'+(events.length!==1?'s':'') : '';
   }
   if (dateStr === isoDate(today())) renderItinerary(p);
+  // If this event has an endDate, also refresh those affected days
+  for (const ev of (day.events||[])) {
+    if (ev.endDate) {
+      const allDays = getTripDays(p);
+      for (const d2 of allDays) {
+        if (d2.date > dateStr && d2.date <= ev.endDate) {
+          const el2 = document.getElementById(`itin-events-${d2.date}`);
+          if (el2) {
+            const sp2 = getSpanEventsForDay(allDays, d2.date);
+            const spHtml2 = sp2.map(({ev:e2, startDate:s2, isEnd:ie}) => renderSpanBanner(d2.date, e2, s2, ie)).join('');
+            const evs2 = [...(d2.events||[])].sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
+            const pot2 = getPotentialSlotsForDay(p, d2.date);
+            el2.innerHTML = spHtml2 + (evs2.length ? evs2.map(e2 => renderEventRow(d2.date, e2)).join('')
+              : !pot2.length && !sp2.length ? `<div class="itin-empty">No events — add one below</div>` : '');
+          }
+        }
+      }
+    }
+  }
 }
 
 // ══════════════════════════════════════
@@ -2520,6 +2604,29 @@ function selectEvType(key, el) {
   el.closest('.event-type-grid').querySelectorAll('.ev-type-opt').forEach(x=>x.classList.remove('selected'));
   el.classList.add('selected');
   selectedEvType = key;
+  updateEvModalForType(key);
+}
+function updateEvModalForType(type) {
+  const isMultiDay = type === 'hotel' || type === 'car';
+  const endDateField = document.getElementById('ev-enddate-field');
+  const timeLabel    = document.getElementById('ev-time-label');
+  const endTimeLabel = document.getElementById('ev-endtime-label');
+  const endDateLabel = document.getElementById('ev-enddate-label');
+  if (endDateField) endDateField.style.display = isMultiDay ? '' : 'none';
+  if (!isMultiDay && document.getElementById('ev-enddate')) document.getElementById('ev-enddate').value = '';
+  if (type === 'hotel') {
+    if (timeLabel)    timeLabel.textContent    = 'Check-in time';
+    if (endTimeLabel) endTimeLabel.textContent = 'Check-out time';
+    if (endDateLabel) endDateLabel.textContent = 'Check-out date';
+  } else if (type === 'car') {
+    if (timeLabel)    timeLabel.textContent    = 'Pick-up time';
+    if (endTimeLabel) endTimeLabel.textContent = 'Drop-off time';
+    if (endDateLabel) endDateLabel.textContent = 'Drop-off date';
+  } else {
+    if (timeLabel)    timeLabel.textContent    = 'Start time';
+    if (endTimeLabel) endTimeLabel.textContent = 'End time';
+    if (endDateLabel) endDateLabel.textContent = 'End date';
+  }
 }
 
 function openAddEventModal(dayDate) {
@@ -2530,12 +2637,14 @@ function openAddEventModal(dayDate) {
   document.getElementById('ev-time').value = '';
   document.getElementById('ev-endtime').value = '';
   document.getElementById('ev-endtime-field').style.display = 'none';
+  document.getElementById('ev-enddate').value = '';
   document.getElementById('ev-details').value = '';
   modalLinks = []; renderModalLinks();
   document.getElementById('ev-delete-btn').style.display = 'none';
   document.getElementById('ev-day-field').style.display = 'none';
   document.getElementById('ev-linked-task-row').style.display = 'none';
   buildEventTypePicker('flight');
+  updateEvModalForType('flight');
   renderEventModalFiles();
   openModal('modal-event');
   setTimeout(() => document.getElementById('ev-title').focus(), 50);
@@ -2554,6 +2663,7 @@ function openEditEventModal(dayDate, evId) {
   document.getElementById('ev-time').value = ev.time||'';
   document.getElementById('ev-endtime').value = ev.endTime||'';
   document.getElementById('ev-endtime-field').style.display = ev.time ? '' : 'none';
+  document.getElementById('ev-enddate').value = ev.endDate||'';
   document.getElementById('ev-details').value = ev.details||'';
   modalLinks = getEventLinks(ev).map(l => ({...l})); renderModalLinks();
   document.getElementById('ev-delete-btn').style.display = '';
@@ -2568,6 +2678,7 @@ function openEditEventModal(dayDate, evId) {
     } else linkedTaskRow.style.display = 'none';
   } else linkedTaskRow.style.display = 'none';
   buildEventTypePicker(ev.type||'note');
+  updateEvModalForType(ev.type||'note');
   renderEventModalFiles();
   openModal('modal-event');
 }
@@ -2588,6 +2699,9 @@ function saveEvent() {
   }
   const startTime = document.getElementById('ev-time').value || null;
   const endTime = startTime ? (document.getElementById('ev-endtime').value || null) : null;
+  const endDateRaw = document.getElementById('ev-enddate').value || null;
+  // endDate must be after the event's own day to be meaningful
+  const endDate = (endDateRaw && endDateRaw > dayDate) ? endDateRaw : null;
   const links = modalLinks.map(l=>({id:l.id||uid(),label:l.label.trim(),url:l.url.trim()})).filter(l=>l.url);
   const ev = {
     id: editingEventId || pendingEventId || uid(),
@@ -2595,6 +2709,7 @@ function saveEvent() {
     title,
     time: startTime,
     endTime,
+    ...(endDate ? {endDate} : {}),
     details: document.getElementById('ev-details').value.trim() || null,
     links: links.length ? links : undefined,
     ...(linkedTaskId ? {linkedTaskId} : {}),
