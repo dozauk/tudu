@@ -186,6 +186,25 @@ Events that span more than one day (hotels, car hire, cruises, etc.) need a gene
 - [ ] No grid conversion needed — times remain local to the trip day; timezone is informational
 - [ ] Event modal: show timezone selectors only when type is `flight`
 
+## Settings & Preferences
+- [ ] Theme toggle (light / dark / system)
+- [ ] Default itinerary view (list / timeline / map) per project
+- [ ] Date/time format preferences
+- [ ] Settings modal already exists — add a Preferences section
+
+## Monetisation / Backend Service
+Two modes planned:
+- **BYOK (bring your own key)** — fully open source; user supplies Google Client ID + API Key in Settings. Maps, geocoding, and Picker all work client-side.
+- **Premium backend** — tudu-hosted service provides geocoding, maps tile proxy, and possibly AI features without requiring users to manage GCP projects. OAuth flow stays the same; geocoding endpoint changes from `maps.googleapis.com` to `api.tudu.app/geocode`.
+
+### Build order
+```
+B1  Preferences section in Settings modal                       [ ]
+B2  tudu backend: geocoding proxy (no user key needed)         [ ]
+B3  tudu backend: auth (account linking / billing)             [ ]
+B4  AI assistant via backend (reads planner data server-side)  [ ]
+```
+
 ## General
 - [ ] Responsive mobile UI
 - [ ] Offline support / PWA
