@@ -987,6 +987,17 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
   </div>
 </div>
 
+<!-- Confirm dialog -->
+<div class="modal-bg" id="modal-confirm">
+  <div class="modal" style="max-width:380px">
+    <p id="modal-confirm-msg" style="margin:0 0 1.25rem;line-height:1.5"></p>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="modal-confirm-ok" onclick="confirmOk()">Delete</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-confirm')">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- Edit planner -->
 <div class="modal-bg" id="modal-edit-planner">
   <div class="modal">
@@ -1553,11 +1564,13 @@ function toggleTaskFull(pid, tid, e) {
 }
 function deleteTaskFull(pid, tid, e) {
   e.stopPropagation();
-  updateData(d => {
-    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===pid);
-    if (p) p.tasks = (p.tasks||[]).filter(t=>t.id!==tid);
+  showConfirm('Delete this task?', () => {
+    updateData(d => {
+      const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===pid);
+      if (p) p.tasks = (p.tasks||[]).filter(t=>t.id!==tid);
+    });
+    refreshPftTile(pid);
   });
-  refreshPftTile(pid);
 }
 function addTaskFull(pid) {
   const input = document.getElementById(`pft-input-${pid}`);
@@ -2026,12 +2039,14 @@ function cycleItemStatus(tid, iid) {
 }
 
 function deleteTaskItem(tid, iid) {
-  updateData(d => {
-    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
-    const t = (p?.tasks||[]).find(x=>x.id===tid);
-    if (t) t.items = (t.items||[]).filter(x=>x.id!==iid);
+  showConfirm('Delete this sub-item?', () => {
+    updateData(d => {
+      const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+      const t = (p?.tasks||[]).find(x=>x.id===tid);
+      if (t) t.items = (t.items||[]).filter(x=>x.id!==iid);
+    });
+    const p = getActiveProject(); if (p) renderDetailTasks(p);
   });
-  const p = getActiveProject(); if (p) renderDetailTasks(p);
 }
 
 function saveTaskName(tid, text) {
@@ -2237,11 +2252,13 @@ function addMilestone() {
   const p = getActiveProject(); if (p) renderDetailPlanning(p);
 }
 function deleteMilestone(mid) {
-  updateData(d => {
-    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
-    if (p) p.milestones = (p.milestones||[]).filter(m=>m.id!==mid);
+  showConfirm('Delete this milestone?', () => {
+    updateData(d => {
+      const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+      if (p) p.milestones = (p.milestones||[]).filter(m=>m.id!==mid);
+    });
+    const p = getActiveProject(); if (p) renderDetailPlanning(p);
   });
-  const p = getActiveProject(); if (p) renderDetailPlanning(p);
 }
 
 // ══════════════════════════════════════
@@ -2918,22 +2935,24 @@ function saveEvent() {
 
 function deleteCurrentEvent() {
   if (!editingEventId || !addEventDay) return;
-  updateData(d => {
-    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
-    if (!p) return;
-    const day = (p.days||[]).find(x=>x.date===addEventDay);
-    if (day) {
-      const ev = (day.events||[]).find(x=>x.id===editingEventId);
-      if (ev?.linkedTaskId) {
-        const task = (p.tasks||[]).find(t=>t.id===ev.linkedTaskId);
-        if (task) { task.linkedEventId=null; task.linkedEventDate=null; }
+  showConfirm('Delete this event?', () => {
+    updateData(d => {
+      const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+      if (!p) return;
+      const day = (p.days||[]).find(x=>x.date===addEventDay);
+      if (day) {
+        const ev = (day.events||[]).find(x=>x.id===editingEventId);
+        if (ev?.linkedTaskId) {
+          const task = (p.tasks||[]).find(t=>t.id===ev.linkedTaskId);
+          if (task) { task.linkedEventId=null; task.linkedEventDate=null; }
+        }
+        day.events = (day.events||[]).filter(x=>x.id!==editingEventId);
       }
-      day.events = (day.events||[]).filter(x=>x.id!==editingEventId);
-    }
+    });
+    closeModal('modal-event');
+    refreshItinDay(addEventDay);
+    const p2=getActiveProject(); if(p2) renderDetailTasks(p2);
   });
-  closeModal('modal-event');
-  refreshItinDay(addEventDay);
-  const p2=getActiveProject(); if(p2) renderDetailTasks(p2);
 }
 
 function unlinkEventFromTask() {
@@ -2979,15 +2998,16 @@ function deletePlanner(e, id) {
   e.stopPropagation();
   const pl = getData().planners.find(x=>x.id===id);
   const isShared = !!pl?._shared;
-  const driveNote = (!isShared && driveTokenValid && drivePlannerMap[id]) ? '\n\nThe Google Drive folder will also be moved to trash.' : '';
+  const driveNote = (!isShared && driveTokenValid && drivePlannerMap[id]) ? ' The Google Drive folder will also be moved to trash.' : '';
   const msg = isShared
     ? `Remove shared planner "${pl?.name}" from your account? The original will not be affected.`
     : `Delete planner "${pl?.name}" and all its projects?${driveNote}`;
-  if (!confirm(msg)) return;
-  updateData(d => { d.planners = d.planners.filter(x=>x.id!==id); });
-  if (activePlannerId===id) activePlannerId = getData().planners[0]?.id||null;
-  if (!isShared && driveTokenValid && drivePlannerMap[id]) drivePlannerFolderTrash(id);
-  renderSidebar(); showList();
+  showConfirm(msg, () => {
+    updateData(d => { d.planners = d.planners.filter(x=>x.id!==id); });
+    if (activePlannerId===id) activePlannerId = getData().planners[0]?.id||null;
+    if (!isShared && driveTokenValid && drivePlannerMap[id]) drivePlannerFolderTrash(id);
+    renderSidebar(); showList();
+  });
 }
 function openEditPlannerModal(id) {
   const pl = getData().planners.find(x=>x.id===id); if (!pl) return;
@@ -3016,16 +3036,17 @@ function savePlannerEdits() {
 function deletePlannerFromModal() {
   const pl = getData().planners.find(x=>x.id===editingPlannerId);
   const isShared = !!pl?._shared;
-  const driveNote = (!isShared && driveTokenValid && drivePlannerMap[editingPlannerId]) ? '\n\nThe Google Drive folder will also be moved to trash.' : '';
+  const driveNote = (!isShared && driveTokenValid && drivePlannerMap[editingPlannerId]) ? ' The Google Drive folder will also be moved to trash.' : '';
   const msg = isShared
     ? `Remove shared planner "${pl?.name}" from your account? The original will not be affected.`
     : `Delete planner "${pl?.name}" and all its projects?${driveNote}`;
-  if (!confirm(msg)) return;
-  updateData(d => { d.planners=d.planners.filter(x=>x.id!==editingPlannerId); });
-  if (activePlannerId===editingPlannerId) activePlannerId=getData().planners[0]?.id||null;
-  if (!isShared && driveTokenValid && drivePlannerMap[editingPlannerId]) drivePlannerFolderTrash(editingPlannerId);
-  closeModal('modal-edit-planner');
-  renderSidebar(); showList();
+  showConfirm(msg, () => {
+    updateData(d => { d.planners=d.planners.filter(x=>x.id!==editingPlannerId); });
+    if (activePlannerId===editingPlannerId) activePlannerId=getData().planners[0]?.id||null;
+    if (!isShared && driveTokenValid && drivePlannerMap[editingPlannerId]) drivePlannerFolderTrash(editingPlannerId);
+    closeModal('modal-edit-planner');
+    renderSidebar(); showList();
+  });
 }
 
 // ══════════════════════════════════════
@@ -3133,14 +3154,15 @@ function saveProject() {
 function deleteCurrentProject() {
   const pl = getData().planners.find(x=>x.id===activePlannerId);
   const p = (pl?.projects||[]).find(x=>x.id===editingProjectId);
-  if (!confirm(`Delete "${p?.name}"?`)) return;
-  updateData(d => {
-    const pl = d.planners.find(x=>x.id===activePlannerId);
-    if (pl) pl.projects = (pl.projects||[]).filter(x=>x.id!==editingProjectId);
+  showConfirm(`Delete "${p?.name}"?`, () => {
+    updateData(d => {
+      const pl = d.planners.find(x=>x.id===activePlannerId);
+      if (pl) pl.projects = (pl.projects||[]).filter(x=>x.id!==editingProjectId);
+    });
+    closeModal('modal-project');
+    if (activeProjectId===editingProjectId) activeProjectId = null;
+    renderSidebar(); showList();
   });
-  closeModal('modal-project');
-  if (activeProjectId===editingProjectId) activeProjectId = null;
-  renderSidebar(); showList();
 }
 
 // ══════════════════════════════════════
@@ -3339,6 +3361,17 @@ function openModal(id) {
   if (id==='modal-import') { document.getElementById('import-result').style.display='none'; }
 }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+let _confirmCallback = null;
+function showConfirm(msg, onConfirm, label) {
+  document.getElementById('modal-confirm-msg').textContent = msg;
+  document.getElementById('modal-confirm-ok').textContent = label || 'Delete';
+  _confirmCallback = onConfirm;
+  document.getElementById('modal-confirm').classList.add('open');
+}
+function confirmOk() {
+  closeModal('modal-confirm');
+  if (_confirmCallback) { _confirmCallback(); _confirmCallback = null; }
+}
 document.querySelectorAll('.modal-bg').forEach(bg => {
   bg.addEventListener('click', e => {
     if (e.target !== bg) return;
@@ -3545,19 +3578,21 @@ async function driveUploadFileWithProgress(file, parentFolderId, onProgress) {
   });
 }
 
-async function deleteProjectFile(fileId) {
+function deleteProjectFile(fileId) {
   const p = getActiveProject(); if (!p) return;
   const f = (p.files||[]).find(x => x.id===fileId); if (!f) return;
-  if (!confirm(`Delete "${f.name}"?\nThis will move the file to Google Drive trash.`)) return;
-  if (driveTokenValid && f.driveFileId) {
-    try { await gapi.client.drive.files.update({ fileId: f.driveFileId, resource: { trashed: true } }); }
-    catch(e) { console.warn('Could not trash Drive file', e); }
-  }
-  updateData(d => {
-    const proj = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
-    if (proj) proj.files = (proj.files||[]).filter(x => x.id!==fileId);
+  const driveNote = (driveTokenValid && f.driveFileId) ? ' This will also move the file to Google Drive trash.' : '';
+  showConfirm(`Delete "${f.name}"?${driveNote}`, async () => {
+    if (driveTokenValid && f.driveFileId) {
+      try { await gapi.client.drive.files.update({ fileId: f.driveFileId, resource: { trashed: true } }); }
+      catch(e) { console.warn('Could not trash Drive file', e); }
+    }
+    updateData(d => {
+      const proj = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+      if (proj) proj.files = (proj.files||[]).filter(x => x.id!==fileId);
+    });
+    renderFilesSection(getActiveProject());
   });
-  renderFilesSection(getActiveProject());
 }
 
 // ── File linking ───────────────────────
@@ -4202,14 +4237,15 @@ async function shareWithUser() {
   }
 }
 
-async function revokeShare(folderId, permId) {
-  if (!confirm('Remove this collaborator?')) return;
-  try {
-    await gapi.client.drive.permissions.delete({ fileId: folderId, permissionId: permId });
-    loadCollaborators(folderId);
-  } catch(e) {
-    alert(`Could not revoke: ${e.result?.error?.message||e.message||'error'}`);
-  }
+function revokeShare(folderId, permId) {
+  showConfirm('Remove this collaborator?', async () => {
+    try {
+      await gapi.client.drive.permissions.delete({ fileId: folderId, permissionId: permId });
+      loadCollaborators(folderId);
+    } catch(e) {
+      alert(`Could not revoke: ${e.result?.error?.message||e.message||'error'}`);
+    }
+  }, 'Remove');
 }
 
 // ── Phase 4b: Picker + shared planners ─
@@ -4313,10 +4349,11 @@ async function refreshSharedPlanners() {
 
 function removeSharedPlanner(id) {
   const pl = getData().planners.find(x=>x.id===id);
-  if (!confirm(`Remove "${pl?.name}" from your account? The original planner will not be affected.`)) return;
-  updateData(d => { d.planners = d.planners.filter(x=>x.id!==id); });
-  if (activePlannerId===id) activePlannerId=getData().planners[0]?.id||null;
-  renderSidebar(); showList();
+  showConfirm(`Remove "${pl?.name}" from your account? The original planner will not be affected.`, () => {
+    updateData(d => { d.planners = d.planners.filter(x=>x.id!==id); });
+    if (activePlannerId===id) activePlannerId=getData().planners[0]?.id||null;
+    renderSidebar(); showList();
+  }, 'Remove');
 }
 
 // ── Owned planner refresh (tab focus / page load) ──
