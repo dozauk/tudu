@@ -765,7 +765,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
                   <button class="tvt-btn active" id="tvt-all" onclick="setTaskGroupMode('all')">All</button>
                   <button class="tvt-btn" id="tvt-ms" onclick="setTaskGroupMode('milestone')">By milestone</button>
                 </div>
-                <button class="tvt-btn" id="tvt-hide-done" onclick="toggleHideDone()" style="border:1px solid var(--border);border-radius:6px;padding:3px 8px">Hide done</button>
+                <button class="tvt-btn" id="tvt-hide-done" onclick="toggleHideDone()" style="border:1px solid var(--border);border-radius:6px;padding:3px 8px"></button>
               </div>
             </div>
             <div class="task-list" id="d-tasks"></div>
@@ -1613,6 +1613,7 @@ function openProject(pid) {
   const p = (pl?.projects||[]).find(x=>x.id===pid);
   if (!p) return;
   activeProjectId = pid;
+  hideDoneTasks = !!p.hideDone;
   pushNavHash();
 
   document.getElementById('view-list').style.display = 'none';
@@ -1871,8 +1872,10 @@ function renderDetailTasks(p) {
   const hdBtn = document.getElementById('tvt-hide-done');
   if (hdBtn) {
     hdBtn.classList.toggle('active', hideDoneTasks);
-    hdBtn.style.background = hideDoneTasks ? 'var(--surface)' : '';
-    hdBtn.style.color = hideDoneTasks ? 'var(--text)' : '';
+    hdBtn.style.background = hideDoneTasks ? 'var(--accent)' : '';
+    hdBtn.style.color = hideDoneTasks ? '#fff' : '';
+    hdBtn.style.borderColor = hideDoneTasks ? 'var(--accent)' : 'var(--border)';
+    hdBtn.textContent = hideDoneTasks ? `Showing ${allTasks.length - done} of ${allTasks.length}` : `Hide done (${done})`;
   }
 
   const tasks = hideDoneTasks ? allTasks.filter(t=>!t.done) : allTasks;
@@ -1936,6 +1939,10 @@ function setTaskGroupMode(mode) {
 }
 function toggleHideDone() {
   hideDoneTasks = !hideDoneTasks;
+  updateData(d => {
+    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+    if (p) p.hideDone = hideDoneTasks;
+  });
   const p = getActiveProject(); if (p) renderDetailTasks(p);
 }
 
