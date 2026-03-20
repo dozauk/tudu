@@ -337,6 +337,8 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .itin-vbtn.active{background:var(--surface);color:var(--text);box-shadow:var(--sh-sm)}
 /* ── Map view ── */
 .itin-event-location{font-size:11.5px;color:var(--text-3);margin-top:2px}
+.itin-loc-link{color:var(--text-3);text-decoration:none}
+.itin-loc-link:hover{color:var(--accent-text);text-decoration:underline}
 .itin-map-outer{border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;height:calc(100vh - var(--th) - 230px);min-height:420px;position:relative;background:var(--surface-2)}
 .itin-map-el{width:100%;height:100%}
 .itin-map-status{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:13px;color:var(--text-2);pointer-events:none;padding:24px;text-align:center}
@@ -946,8 +948,11 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
       <textarea id="ev-details" rows="3" placeholder="Confirmation code, booking ref…" style="resize:vertical"></textarea>
     </div>
     <div class="form-field">
-      <label>Location <span style="font-size:11px;font-weight:400;color:var(--text-3)">— plotted on the map view</span></label>
-      <input id="ev-location" placeholder="Address, hotel name, airport…">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+        <label style="margin-bottom:0">Location <span style="font-size:11px;font-weight:400;color:var(--text-3)">— plotted on the map view</span></label>
+        <a id="ev-location-maps-link" href="#" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent-text);display:none;text-decoration:none" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">Open in Maps ↗</a>
+      </div>
+      <input id="ev-location" placeholder="Address, hotel name, airport…" oninput="updateEvLocationLink()">
     </div>
     <div class="form-field">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
@@ -2643,7 +2648,7 @@ function renderEventRow(dayDate, ev) {
           ${ev.endDate ? `<span class="itin-span-end-tag">→ ${fmtDateShort(ev.endDate)}</span>` : ''}
         </div>
         ${ev.details ? `<div class="itin-event-details">${ev.details}</div>` : ''}
-        ${ev.location ? `<div class="itin-event-location">📍 ${ev.location}</div>` : ''}
+        ${ev.location ? `<div class="itin-event-location">📍 <a class="itin-loc-link" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.location)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${ev.location}</a></div>` : ''}
         ${(() => { const lks=getEventLinks(ev); return lks.length ? `<div class="itin-event-links">${lks.map(l=>`<a class="itin-event-link-chip" href="${l.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 ${l.label||'Link'}</a>`).join('')}</div>` : ''; })()}
       </div>
       <div class="itin-event-actions" onclick="event.stopPropagation()">
@@ -2730,6 +2735,18 @@ function removeModalLink(idx) {
   renderModalLinks();
 }
 
+function updateEvLocationLink() {
+  const val = document.getElementById('ev-location')?.value.trim();
+  const link = document.getElementById('ev-location-maps-link');
+  if (!link) return;
+  if (val) {
+    link.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(val)}`;
+    link.style.display = '';
+  } else {
+    link.style.display = 'none';
+  }
+}
+
 function onEvTimeChange() {
   const hasTime = !!document.getElementById('ev-time').value;
   document.getElementById('ev-endtime-field').style.display = hasTime ? '' : 'none';
@@ -2786,6 +2803,7 @@ function openAddEventModal(dayDate) {
   document.getElementById('ev-enddate').min = isoDate(_minEnd);
   document.getElementById('ev-details').value = '';
   document.getElementById('ev-location').value = '';
+  updateEvLocationLink();
   modalLinks = []; renderModalLinks();
   document.getElementById('ev-delete-btn').style.display = 'none';
   document.getElementById('ev-day-field').style.display = 'none';
@@ -2815,6 +2833,7 @@ function openEditEventModal(dayDate, evId) {
   document.getElementById('ev-enddate').min = isoDate(_minEndE);
   document.getElementById('ev-details').value = ev.details||'';
   document.getElementById('ev-location').value = ev.location||'';
+  updateEvLocationLink();
   modalLinks = getEventLinks(ev).map(l => ({...l})); renderModalLinks();
   document.getElementById('ev-delete-btn').style.display = '';
   document.getElementById('ev-day-field').style.display = 'none';
