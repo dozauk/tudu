@@ -544,6 +544,9 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .drive-settings-instructions li{margin-bottom:2px}
 .drive-settings-instructions a{color:var(--accent-text)}
 .drive-settings-instructions code{font-size:11.5px;background:var(--surface-2);padding:1px 5px;border-radius:4px;border:1px solid var(--border)}
+.drive-conflict-banner{display:none;background:var(--amber-bg);border-bottom:1px solid var(--amber-t);padding:9px 20px;font-size:13px;color:var(--text);align-items:center;gap:10px;flex-wrap:wrap}
+.drive-conflict-banner.visible{display:flex}
+.drive-conflict-banner-msg{flex:1;min-width:0}
 .settings-section{margin-bottom:20px}
 .settings-section-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
 .settings-drive-status{margin-bottom:14px;padding:10px 12px;border-radius:var(--r-md);background:var(--surface-2);border:1px solid var(--border)}
@@ -668,6 +671,13 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
         New project
       </button>
     </div>
+  </div>
+
+  <!-- Drive conflict / update banner -->
+  <div class="drive-conflict-banner" id="drive-conflict-banner">
+    <span class="drive-conflict-banner-msg" id="drive-conflict-msg"></span>
+    <button class="btn btn-sm" id="drive-conflict-reload-btn" onclick="reloadFromDrive()">Load from Drive</button>
+    <button class="btn btn-ghost btn-sm" onclick="keepLocalChanges()">Keep my version</button>
   </div>
 
   <!-- LIST VIEW -->
@@ -3651,6 +3661,7 @@ let driveRootFolderId = null;
 let driveIndexFileId = null;
 let drivePlannerMap = {};   // { [plannerId]: { folderId, dataFileId } }
 let driveSyncTimer = null;
+let driveLocallyDirty = false;  // true while a local change is waiting to sync
 let driveUserInfo = null;
 let driveTokenClient = null;
 
@@ -3799,24 +3810,55 @@ async function driveCreatePlannerFiles(planner) {
   return { id: planner.id, name: planner.name, icon: planner.icon||'', folderId, dataFileId };
 }
 
+async function driveGetModifiedTime(fileId) {
+  const res = await gapi.client.drive.files.get({ fileId, fields: 'modifiedTime' });
+  return res.result.modifiedTime; // ISO 8601 string
+}
+
 async function driveReadAllPlanners() {
   const indexContent = await driveReadFile(driveIndexFileId);
   const index = JSON.parse(indexContent);
   drivePlannerMap = {};
-  const ownedPlanners = [];
   for (const entry of index.planners || []) {
     drivePlannerMap[entry.id] = { folderId: entry.folderId, dataFileId: entry.dataFileId };
-    try {
-      ownedPlanners.push(JSON.parse(await driveReadFile(entry.dataFileId)));
-    } catch(e) { console.warn('Could not load planner', entry.id, e); }
   }
-  // Preserve shared planners already cached in localStorage
+  saveDriveConfig({ plannerMap: drivePlannerMap });
+
+  const { lastSuccessfulSync } = getDriveConfig();
+  const entries = index.planners || [];
+
+  // Determine which planners need pulling from Drive
+  // If no lastSuccessfulSync: fresh sign-in or new device — Drive is source of truth, pull all
+  // If lastSuccessfulSync exists: only pull planners that Drive has updated since our last write
+  let toPull = entries;
+  if (lastSuccessfulSync) {
+    const modTimes = await Promise.all(entries.map(async e => {
+      try { return await driveGetModifiedTime(e.dataFileId); }
+      catch { return null; } // can't check — assume needs pulling
+    }));
+    toPull = entries.filter((e, i) => !modTimes[i] || modTimes[i] > lastSuccessfulSync);
+  }
+
   const existing = getData();
   const sharedPlanners = (existing.planners||[]).filter(pl => !!pl._shared);
-  saveDriveConfig({ plannerMap: drivePlannerMap });
+
+  if (!toPull.length) {
+    // Drive matches our last sync — local data is already current
+    refreshSharedPlanners();
+    return;
+  }
+
+  // Pull only the planners that are newer on Drive; keep local copies of the rest
+  const localById = {};
+  for (const pl of (existing.planners||[]).filter(p => !p._shared)) localById[pl.id] = pl;
+  for (const entry of toPull) {
+    try { localById[entry.id] = JSON.parse(await driveReadFile(entry.dataFileId)); }
+    catch(e) { console.warn('Could not load planner', entry.id, e); }
+  }
+  const ownedPlanners = entries.map(e => localById[e.id]).filter(Boolean);
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...existing, planners: [...ownedPlanners, ...sharedPlanners] }));
-  init(); // re-render with Drive data
-  refreshSharedPlanners(); // refresh shared planner data from Drive
+  init();
+  refreshSharedPlanners();
 }
 
 async function driveSaveData() {
@@ -3862,7 +3904,8 @@ async function driveSaveData() {
       driveIndexFileId = await driveCreateJsonFile(DRIVE_INDEX_FILE, indexData, driveRootFolderId);
       saveDriveConfig({ indexFileId: driveIndexFileId });
     }
-    saveDriveConfig({ plannerMap: drivePlannerMap });
+    saveDriveConfig({ plannerMap: drivePlannerMap, lastSuccessfulSync: new Date().toISOString() });
+    driveLocallyDirty = false;
     setSyncStatus('saved');
   } catch(e) {
     console.error('Drive save error', e);
@@ -3872,6 +3915,7 @@ async function driveSaveData() {
 
 function scheduleDriveSync() {
   if (!driveTokenValid || !driveGapiReady) return;
+  driveLocallyDirty = true;
   setSyncStatus('saving');
   clearTimeout(driveSyncTimer);
   driveSyncTimer = setTimeout(driveSaveData, 800);
@@ -3938,6 +3982,10 @@ function setSyncStatus(state) {
   } else if (state === 'saved') {
     el.className += ' saved';
     el.innerHTML = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Saved`;
+    setTimeout(() => { if (el.className.includes('saved')) el.className = 'drive-sync-indicator'; }, 3000);
+  } else if (state === 'pulled') {
+    el.className += ' saved';
+    el.innerHTML = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v6.5M4 5.5L6 7.5 8 5.5M1.5 10.5h9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg> Updated from Drive`;
     setTimeout(() => { if (el.className.includes('saved')) el.className = 'drive-sync-indicator'; }, 3000);
   } else if (state === 'error') {
     el.className += ' error';
@@ -4252,8 +4300,94 @@ function removeSharedPlanner(id) {
   renderSidebar(); showList();
 }
 
+// ── Owned planner refresh (tab focus / page load) ──
+async function refreshOwnedPlanners() {
+  if (!driveTokenValid || !driveGapiReady) return;
+  const { lastSuccessfulSync, plannerMap } = getDriveConfig();
+  if (!lastSuccessfulSync || !plannerMap) return;
+
+  const entries = Object.entries(plannerMap); // [[id, {folderId, dataFileId}], ...]
+  if (!entries.length) return;
+
+  // Check modifiedTime for each owned planner file in parallel
+  const checks = await Promise.all(entries.map(async ([id, entry]) => {
+    if (!entry?.dataFileId) return null;
+    try {
+      const modTime = await driveGetModifiedTime(entry.dataFileId);
+      return modTime > lastSuccessfulSync ? { id, ...entry, modTime } : null;
+    } catch { return null; }
+  }));
+  const newer = checks.filter(Boolean);
+  if (!newer.length) return;
+
+  if (driveLocallyDirty) {
+    // We have unsaved local changes AND Drive is ahead — genuine conflict
+    showDriveConflictBanner(
+      `Another device updated ${newer.length === 1 ? 'a planner' : `${newer.length} planners`} while you have unsaved changes.`
+    );
+    return;
+  }
+
+  // No local pending changes — safe to pull quietly
+  const existing = getData();
+  const planners = [...(existing.planners||[])];
+  let changed = false;
+  for (const entry of newer) {
+    try {
+      const fresh = JSON.parse(await driveReadFile(entry.dataFileId));
+      const idx = planners.findIndex(p => p.id === entry.id);
+      if (idx !== -1) { planners[idx] = fresh; changed = true; }
+    } catch(e) { console.warn('Could not refresh owned planner', entry.id, e); }
+  }
+  if (!changed) return;
+
+  // Write merged result to localStorage (bypass updateData to avoid re-triggering sync)
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...existing, planners }));
+  saveDriveConfig({ lastSuccessfulSync: new Date().toISOString() });
+
+  // Re-render affected views
+  renderSidebar();
+  const p = getActiveProject();
+  if (p) {
+    renderDetailHeader(p);
+    if (currentDetailTab === 'itinerary') renderItinerary(p);
+    else renderDetailTasks(p);
+  } else {
+    showList();
+  }
+  setSyncStatus('pulled');
+}
+
+// ── Conflict / update banner ────────────
+function showDriveConflictBanner(msg) {
+  const el = document.getElementById('drive-conflict-banner');
+  const msgEl = document.getElementById('drive-conflict-msg');
+  if (!el || !msgEl) return;
+  msgEl.textContent = msg;
+  el.classList.add('visible');
+}
+
+function hideDriveConflictBanner() {
+  document.getElementById('drive-conflict-banner')?.classList.remove('visible');
+}
+
+function reloadFromDrive() {
+  hideDriveConflictBanner();
+  clearTimeout(driveSyncTimer);
+  driveLocallyDirty = false;
+  driveLoadData();
+}
+
+function keepLocalChanges() {
+  hideDriveConflictBanner();
+  // pending driveSyncTimer will fire normally and write local data to Drive
+}
+
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) refreshSharedPlanners();
+  if (!document.hidden) {
+    refreshOwnedPlanners();
+    refreshSharedPlanners();
+  }
 });
 
 // ══════════════════════════════════════
