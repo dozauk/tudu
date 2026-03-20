@@ -2207,11 +2207,13 @@ function toggleDetailTask(tid) {
   const p = getActiveProject(); if (p) { renderDetailTasks(p); updateRing(p); }
 }
 function deleteDetailTask(tid) {
-  updateData(d => {
-    const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
-    if (p) p.tasks = (p.tasks||[]).filter(t=>t.id!==tid);
+  showConfirm('Delete this task?', () => {
+    updateData(d => {
+      const p = (d.planners.find(x=>x.id===activePlannerId)?.projects||[]).find(x=>x.id===activeProjectId);
+      if (p) p.tasks = (p.tasks||[]).filter(t=>t.id!==tid);
+    });
+    const p = getActiveProject(); if (p) { renderDetailTasks(p); updateRing(p); }
   });
-  const p = getActiveProject(); if (p) { renderDetailTasks(p); updateRing(p); }
 }
 function addDetailTask() {
   const input = document.getElementById('d-task-input');
