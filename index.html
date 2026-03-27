@@ -3769,7 +3769,20 @@ function initGoogleDrive() {
     hint: lastEmail || undefined,  // pre-fills account chooser on manual sign-in
   });
 
-  // Attempt silent sign-in if we've signed in before.
+  // If we have a cached token that hasn't expired, restore it immediately — no roundtrip.
+  const cfg2 = getDriveConfig();
+  if (cfg2.accessToken && cfg2.tokenExpiresAt && Date.now() < cfg2.tokenExpiresAt - 60_000) {
+    gapi.client.setToken({ access_token: cfg2.accessToken });
+    handleDriveTokenResponse({ access_token: cfg2.accessToken });
+    // Schedule a silent refresh for 5 min before expiry
+    const msUntilRefresh = cfg2.tokenExpiresAt - Date.now() - 5 * 60_000;
+    if (msUntilRefresh > 0) setTimeout(() => {
+      if (driveTokenValid) driveTokenClient.requestAccessToken({ prompt: 'none', hint: lastEmail });
+    }, msUntilRefresh);
+    return;
+  }
+
+  // No valid cached token — attempt silent sign-in if we've signed in before.
   // prompt:'none' = no UI shown; GIS silently returns a token if browser session is valid.
   // Falls back to the 'Sign in' button on error (e.g. session expired, cookies blocked).
   if (lastEmail) {
@@ -3785,14 +3798,29 @@ async function handleDriveTokenResponse(response) {
   }
   driveTokenValid = true;
 
-  // Fetch user profile
-  try {
-    const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-      headers: { Authorization: `Bearer ${gapi.client.getToken().access_token}` }
+  // Cache the token so page refreshes don't need a roundtrip
+  if (response.access_token && response.expires_in) {
+    saveDriveConfig({
+      accessToken: response.access_token,
+      tokenExpiresAt: Date.now() + Number(response.expires_in) * 1000,
     });
-    driveUserInfo = await r.json();
-    saveDriveConfig({ lastEmail: driveUserInfo.email });
-  } catch(e) {}
+  }
+
+  // Fetch user profile (skip if we already have it — e.g. restored from cache)
+  if (!driveUserInfo) {
+    const cfg3 = getDriveConfig();
+    if (cfg3.userInfo) {
+      driveUserInfo = cfg3.userInfo;  // restore from cache immediately
+    } else {
+      try {
+        const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${gapi.client.getToken().access_token}` }
+        });
+        driveUserInfo = await r.json();
+        saveDriveConfig({ lastEmail: driveUserInfo.email, userInfo: driveUserInfo });
+      } catch(e) {}
+    }
+  }
 
   updateDriveUI();
 
@@ -3816,7 +3844,7 @@ function signOutDrive() {
   driveUserInfo = null;
   driveRootFolderId = null;
   drivePlannerMap = {};
-  saveDriveConfig({ lastEmail: null, rootFolderId: null, plannerMap: {} });
+  saveDriveConfig({ lastEmail: null, rootFolderId: null, plannerMap: {}, accessToken: null, tokenExpiresAt: null, userInfo: null });
   updateDriveUI();
   setSyncStatus('off');
 }
