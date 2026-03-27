@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>tudu</title>
+<link rel="icon" type="image/x-icon" href="img/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="img/tudu.svg">
+<link rel="apple-touch-icon" sizes="128x128" href="img/tudu-128.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;1,14..32,400&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer onload="onGisLoad()"></script>
@@ -42,7 +45,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 
 /* ── Sidebar ── */
 .sb-header{padding:16px 16px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
-.app-logo{width:28px;height:28px;background:var(--accent);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:13px;letter-spacing:-.5px;flex-shrink:0}
+.app-logo{width:28px;height:28px;flex-shrink:0}
 .app-name{font-size:15px;font-weight:600;color:var(--text);letter-spacing:-.3px}
 .sb-section{padding:12px 10px 4px;font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em}
 .planner-item{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:var(--r-md);cursor:pointer;margin:1px 6px;transition:background .12s;color:var(--text-2);font-size:13.5px;font-weight:500;position:relative}
@@ -622,7 +625,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 <!-- ══════ SIDEBAR ══════ -->
 <nav class="sidebar">
   <div class="sb-header">
-    <div class="app-logo">tu</div>
+    <img class="app-logo" src="img/tudu.svg" alt="tudu">
     <span class="app-name">tudu</span>
   </div>
   <div class="sb-section">Planners</div>

@@ -108,6 +108,9 @@ Always accessible via the **⚙ Settings** button in the sidebar footer, or the 
 |------|---------|
 | `index.html` | The entire application — HTML, CSS, JS in one file |
 | `privacy.html` | Privacy policy page |
+| `img/tudu.svg` | App logo (SVG, used as favicon and sidebar icon) |
+| `img/favicon.ico` | Favicon (ICO, multi-size) |
+| `img/tudu-*.png` | Logo PNGs at 16, 32, 48, 64, 128, 256 px |
 | `TODO.md` | Roadmap and future feature backlog |
 | `README.md` | This file |
 | `ARCHITECTURE.md` | Technical internals for developers |
