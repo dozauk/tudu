@@ -1050,40 +1050,21 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
       <button class="modal-close" onclick="closeModal('modal-settings')">×</button>
     </div>
 
-    <!-- Google Drive section -->
+    <!-- Google Drive / login section -->
     <div class="settings-section">
-      <p class="settings-section-label">Google Drive</p>
+      <p class="settings-section-label">Google Account</p>
       <div id="settings-drive-status" class="settings-drive-status"></div>
-      <div class="form-field" style="margin-bottom:8px">
-        <label>OAuth 2.0 Client ID</label>
-        <input id="drive-client-id-input" placeholder="123456789-abc….apps.googleusercontent.com" style="font-family:monospace;font-size:12px">
-      </div>
-      <details style="margin-bottom:4px">
-        <summary style="font-size:12.5px;font-weight:500;color:var(--text-2);cursor:pointer;user-select:none;padding:4px 0">How to get a Client ID</summary>
-        <ol class="drive-settings-instructions" style="margin-top:8px">
-          <li>Go to <a href="https://console.cloud.google.com" target="_blank" rel="noopener">console.cloud.google.com</a></li>
-          <li>Create a project (or select an existing one)</li>
-          <li>Enable the <strong>Google Drive API</strong> under APIs &amp; Services → Library</li>
-          <li>Go to APIs &amp; Services → Credentials → Create Credentials → <strong>OAuth 2.0 Client ID</strong></li>
-          <li>Application type: <strong>Web application</strong></li>
-          <li>Authorised JavaScript origins — add both:<br>
-            <code>https://www.doza.org</code><br>
-            <code>http://localhost:8080</code>
-          </li>
-          <li>Copy the Client ID and paste it above</li>
-        </ol>
-      </details>
     </div>
 
     <!-- API Keys section -->
     <div class="settings-section">
-      <p class="settings-section-label">API Keys <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3)">— bring your own key (free, open source mode)</span></p>
+      <p class="settings-section-label">Maps &amp; Geocoding <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3)">— optional</span></p>
       <div class="form-field" style="margin-bottom:4px">
-        <label>Google API Key <span style="font-size:11px;font-weight:400;color:var(--text-3)">— enables shared planner picker, map view &amp; geocoding</span></label>
+        <label>Google API Key <span style="font-size:11px;font-weight:400;color:var(--text-3)">— enables map view, geocoding &amp; shared planner picker</span></label>
         <input id="drive-api-key-input" placeholder="AIzaSy…" style="font-family:monospace;font-size:12px">
       </div>
       <details style="margin-bottom:4px">
-        <summary style="font-size:12.5px;font-weight:500;color:var(--text-2);cursor:pointer;user-select:none;padding:4px 0">Required Google Cloud APIs</summary>
+        <summary style="font-size:12.5px;font-weight:500;color:var(--text-2);cursor:pointer;user-select:none;padding:4px 0">How to get a Google API Key</summary>
         <ol class="drive-settings-instructions" style="margin-top:8px">
           <li>In <a href="https://console.cloud.google.com" target="_blank" rel="noopener">Google Cloud Console</a> → APIs &amp; Services → Library, enable:</li>
           <li><strong>Maps JavaScript API</strong> — renders the map view</li>
@@ -1094,9 +1075,30 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
       </details>
     </div>
 
+    <!-- Advanced / self-hosting -->
+    <details style="margin:0 0 8px">
+      <summary style="font-size:12px;color:var(--text-3);cursor:pointer;user-select:none;padding:4px 0">Advanced (self-hosting)</summary>
+      <div class="settings-section" style="margin-top:8px">
+        <div class="form-field" style="margin-bottom:4px">
+          <label>OAuth 2.0 Client ID <span style="font-size:11px;font-weight:400;color:var(--text-3)">— override the built-in ID</span></label>
+          <input id="drive-client-id-input" placeholder="123456789-abc….apps.googleusercontent.com" style="font-family:monospace;font-size:12px">
+        </div>
+        <details style="margin-bottom:4px">
+          <summary style="font-size:12.5px;font-weight:500;color:var(--text-2);cursor:pointer;user-select:none;padding:4px 0">How to get a Client ID</summary>
+          <ol class="drive-settings-instructions" style="margin-top:8px">
+            <li>Go to <a href="https://console.cloud.google.com" target="_blank" rel="noopener">console.cloud.google.com</a></li>
+            <li>Create a project and enable the <strong>Google Drive API</strong></li>
+            <li>APIs &amp; Services → Credentials → Create Credentials → <strong>OAuth 2.0 Client ID</strong></li>
+            <li>Application type: <strong>Web application</strong> — add your origin(s) under Authorised JavaScript origins</li>
+            <li>Copy the Client ID and paste it above</li>
+          </ol>
+        </details>
+      </div>
+    </details>
+
     <div class="modal-actions">
       <button class="btn" onclick="closeModal('modal-settings')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveDriveClientId()">Save</button>
+      <button class="btn btn-primary" onclick="saveSettings()">Save</button>
     </div>
   </div>
 </div>
@@ -1381,9 +1383,9 @@ function showList() {
       <div class="empty-title" style="font-size:22px;margin-bottom:6px">Welcome to tudu</div>
       <div class="empty-sub" style="margin-bottom:20px">Plan projects, trips, and tasks — all in one place</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
-        ${!signedIn && getDriveConfig().clientId ? `<button class="btn btn-primary" onclick="signInDrive()">
+        ${!signedIn ? `<button class="btn btn-primary" onclick="signInDrive()">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1.5C3.96 1.5 1.5 3.96 1.5 7S3.96 12.5 7 12.5 12.5 10.04 12.5 7 10.04 1.5 7 1.5z" stroke="currentColor" stroke-width="1.3"/><path d="M7 5v4M5 7h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-          Sign in with Google</button>` : ''}
+          Log in with Google</button>` : ''}
         <button class="btn ${signedIn ? 'btn-primary' : ''}" onclick="openModal('modal-new-planner');closeMobileSidebar()">
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1.5v10M1.5 6.5h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           New planner</button>
@@ -3476,7 +3478,7 @@ function renderFilesSection(p) {
   if (!files.length) {
     el.innerHTML = driveTokenValid
       ? '<div class="files-empty">No files yet — click Upload to attach files to this project.</div>'
-      : '<div class="files-empty">Connect Google Drive to upload and manage files.</div>';
+      : '<div class="files-empty">Log in with Google to upload and manage files.</div>';
     return;
   }
   el.innerHTML = files.map(f => renderFileItem(p, f)).join('');
@@ -3530,7 +3532,7 @@ function renderFileItem(p, f) {
 
 // ── File upload ────────────────────────
 function triggerFileUpload() {
-  if (!driveTokenValid) { alert('Connect Google Drive to upload files.'); return; }
+  if (!driveTokenValid) { alert('Log in with Google to upload files.'); return; }
   document.getElementById('file-upload-input').value = '';
   document.getElementById('file-upload-input').click();
 }
@@ -3768,6 +3770,10 @@ let driveLocallyDirty = false;  // true while a local change is waiting to sync
 let driveUserInfo = null;
 let driveTokenClient = null;
 
+// Built-in OAuth client ID — injected at deploy time (same pattern as __VERSION__).
+// Self-hosters can override this by entering their own Client ID in Settings → Advanced.
+const TUDU_CLIENT_ID = '__CLIENT_ID__';
+
 const DRIVE_FOLDER_NAME = 'tudu';
 const DRIVE_INDEX_FILE  = 'index.json';
 const DRIVE_PLANNER_FILE = 'planner.json';
@@ -3793,11 +3799,12 @@ function maybeDriveInit() {
 
 // ── Initialise ─────────────────────────
 function initGoogleDrive() {
-  const { clientId } = getDriveConfig();
+  const cfg = getDriveConfig();
+  const clientId = TUDU_CLIENT_ID || cfg.clientId;
   updateDriveUI();
   if (!clientId) return;
 
-  const { lastEmail } = getDriveConfig();
+  const { lastEmail } = cfg;
 
   driveTokenClient = google.accounts.oauth2.initTokenClient({
     client_id: clientId,
@@ -4130,15 +4137,7 @@ function setSyncStatus(state) {
 function updateDriveUI() {
   const el = document.getElementById('drive-auth-area');
   if (!el) return;
-  const { clientId } = getDriveConfig();
-
-  if (!clientId) {
-    el.innerHTML = `<button class="drive-sign-in-btn" onclick="openSettings()">
-      <svg width="14" height="14" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-      Connect Google Drive
-    </button>`;
-    return;
-  }
+  const effectiveClientId = TUDU_CLIENT_ID || getDriveConfig().clientId;
 
   if (!driveGapiReady || !driveGisReady) {
     el.innerHTML = `<button class="drive-sign-in-btn" disabled style="opacity:.5;cursor:default">Loading…</button>`;
@@ -4146,9 +4145,10 @@ function updateDriveUI() {
   }
 
   if (!driveTokenValid) {
-    el.innerHTML = `<button class="drive-sign-in-btn" onclick="signInDrive()">
+    const action = effectiveClientId ? 'signInDrive()' : 'openSettings()';
+    el.innerHTML = `<button class="drive-sign-in-btn" onclick="${action}">
       <svg width="14" height="14" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-      Sign in with Google
+      Log in with Google
     </button>`;
     return;
   }
@@ -4178,7 +4178,7 @@ function updateDriveUI() {
 function openSettings() {
   const { clientId, apiKey } = getDriveConfig();
   const el = document.getElementById('drive-client-id-input');
-  if (el) el.value = clientId || '';
+  if (el) el.value = clientId || '';  // only show if a custom override was saved
   const ak = document.getElementById('drive-api-key-input');
   if (ak) ak.value = apiKey || '';
   updateSettingsDriveStatus();
@@ -4189,19 +4189,14 @@ function openDriveSettings() { openSettings(); } // legacy alias
 function updateSettingsDriveStatus() {
   const el = document.getElementById('settings-drive-status');
   if (!el) return;
-  const { clientId } = getDriveConfig();
-  if (!clientId) {
-    el.innerHTML = `<p style="margin:0;font-size:12.5px;color:var(--text-3);line-height:1.5">Connect Google Drive to sync data across devices, attach files, and share planners with others.</p>`;
-    return;
-  }
   if (!driveGapiReady || !driveGisReady) {
-    el.innerHTML = `<p style="margin:0;font-size:12.5px;color:var(--text-3)">Loading Drive libraries…</p>`;
+    el.innerHTML = `<p style="margin:0;font-size:12.5px;color:var(--text-3)">Loading…</p>`;
     return;
   }
   if (!driveTokenValid) {
     el.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-      <span style="font-size:12.5px;color:var(--text-2)">Not signed in</span>
-      <button class="btn btn-sm" onclick="signInDrive()">Sign in with Google</button>
+      <span style="font-size:12.5px;color:var(--text-2)">Not signed in. Sync your data across devices and share planners.</span>
+      <button class="btn btn-sm btn-primary" onclick="signInDrive()">Log in with Google</button>
     </div>`;
     return;
   }
@@ -4220,11 +4215,10 @@ function updateSettingsDriveStatus() {
   </div>`;
 }
 
-function saveDriveClientId() {
+function saveSettings() {
   const clientId = document.getElementById('drive-client-id-input')?.value.trim();
   const apiKey   = document.getElementById('drive-api-key-input')?.value.trim();
-  if (!clientId) return;
-  saveDriveConfig({ clientId, apiKey: apiKey || '' });
+  saveDriveConfig({ apiKey: apiKey || '', ...(clientId ? { clientId } : {}) });
   closeModal('modal-settings');
   if (driveGisReady && driveGapiReady) initGoogleDrive();
   else updateDriveUI();
@@ -4749,7 +4743,7 @@ async function renderMapView(p, days) {
 
 // ── Event modal file upload ─────────────
 function triggerEvFileUpload() {
-  if (!driveTokenValid) { alert('Connect Google Drive to upload files.'); return; }
+  if (!driveTokenValid) { alert('Log in with Google to upload files.'); return; }
   document.getElementById('ev-file-upload-input').value = '';
   document.getElementById('ev-file-upload-input').click();
 }
@@ -4764,7 +4758,7 @@ async function uploadFilesForEvent(files) {
   const p = getActiveProject(); if (!p) return;
   const evId = editingEventId || pendingEventId;
   if (!evId) return;
-  if (!driveTokenValid) { alert('Connect Google Drive to upload files.'); return; }
+  if (!driveTokenValid) { alert('Log in with Google to upload files.'); return; }
   const listEl = document.getElementById('ev-files-list');
   for (const file of files) {
     const progId = 'ev-prog-' + uid();

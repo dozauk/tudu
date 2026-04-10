@@ -22,10 +22,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Inject git version
+      - name: Inject git version and client ID
         run: |
           SHA=$(git rev-parse --short HEAD)
           sed -i "s/__VERSION__/${SHA}/g" index.html
+          sed -i "s/__CLIENT_ID__/${{ secrets.GOOGLE_CLIENT_ID }}/g" index.html
 
       - uses: actions/configure-pages@v5
 
